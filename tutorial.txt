@@ -1,0 +1,26 @@
+## MySQL
+
+[sql server]  ---  [sql client]
+
+
+[user
+	browser
+]
+
+
+
+[frontend server
+	use **express** to listen and send http response to user 
+	use **axios** to send http request to backend server
+]
+
+
+
+[backend server
+	use **flask** to send json to frontend server 
+	use **pymysql** to query database 
+]
+
+
+
+[mysql server]
