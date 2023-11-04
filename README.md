@@ -4,10 +4,12 @@
 
 * [Frontend] Single page application with client side routing
 
-* [Frontend-Backend] RESTful API built with Flask, communication via axios.
+* [Frontend-Backend] RESTful(?) API built with Flask, communication via axios.
 
 * [Frontend] Served using express (listen to user request)
 
 * [Backend] Backend and database communication via pymysql
 
+## API 
 
+We design and implement a RESTful api. Documentation is [here](./doc/api/README.md)
