@@ -117,23 +117,30 @@ These api's are for general features that works for all types of users. The inpu
 
     This group of API is to get public information. It should only accept `GET` request, and the result should be independent from user role.
 
-   - `/public`
+   - `/public` 
 
-      - `/flight`
+      - [`/flight`](/doc/api/public/flight.md)
 
-        - `GET /:flight_id`: Get the detailed info of a specific flight, could be used to render a dedicated page for that flight
+        <!-- - `GET /:flight_id`: 
+          Get the detailed info of a specific flight, could be used to render a dedicated page for that flight -->
 
         - `GET /search`: Allows searching for flights
 
-2. **Authentication**
+1. **Authentication**
 
    - `/auth`
 
-     - `POST /register`: Register a new user.
+     - [`POST /register`](/doc/api/auth/register.md): 
+       
+       Register a new user.
 
-     - `POST /login`: Authenticate and log in a user.
+     - [`POST /login`](/doc/api/auth/login.md):
+  
+       Authenticate and log in a user.
 
-     - `POST /logout`: Log out the currently authenticated user.
+     - [`POST /logout`](/doc/api/auth/logout.md):
+    
+       Log out the currently authenticated user.
 
 ### API for Role-Based Features
 
@@ -145,15 +152,15 @@ These api's are for features with one of the following properties
    
    - `/customer`
 
-     - `/flight`
+     - [`/flight`](/doc/api/customer/flight.md)
 
        - `GET /my`: Retrieve flights for the authenticated user 
 
-     - `/ticket`
+     - [`/ticket`](/doc/api/customer/ticket.md)
 
        - `POST /purchase`: Purchase tickets for the authenticated user (directly without an agent).
 
-     - `/misc`
+     - ['misc'](doc/api/customer/misc.md)
 
        - `GET /spending`: Retrieve spending information for the authenticated user.
 
@@ -161,15 +168,15 @@ These api's are for features with one of the following properties
 
    - `/booking-agent`
 
-     - `/flight`
+     - [`/flight`](/doc/api/booking-agent/flight.md)
 
        - `GET /my`: Retrieve flights for the authenticated user 
 
-     - `/ticket`
+     - [`/ticket`](/doc/api/booking-agent/ticket.md)
 
        - `POST /purchase`: Purchase tickets for the authenticated user (via an agent).
 
-     - `/misc`
+     - [`/misc`](/doc/api/booking-agent/misc.md)
 
        - `GET /commission`: Retrieve commission information for the authenticated booking agent.
 
@@ -181,7 +188,7 @@ These api's are for features with one of the following properties
 
    - `/airline-staff`
 
-     - `/flight`
+     - [`/flight`](/doc/api/airline-staff/flight.md)
 
        - `GET /my`: Retrieve flights for the authenticated airline staff.
 
@@ -189,28 +196,28 @@ These api's are for features with one of the following properties
 
        - `PUT /:flight_id/status`: Change the status of a specific flight.
 
-  - `/airplane`
+     - [`/airplane`](/doc/api/airline-staff/airplane.md)
 
-     - `POST /add`: Add a new airplane to the system.
+        - `POST /add`: Add a new airplane to the system.
 
-  - `/airport`
+     - [`/airport`](/doc/api/airline-staff/airport.md)
 
-     - `POST /add`: Add a new airport to the system.
+        - `POST /add`: Add a new airport to the system.
 
-  - `/booking-agent`
+     - [`/booking-agent`](/doc/api/airline-staff/booking-agent.md)
 
-     - `GET /`: Retrieve a list of all booking agents.
+        - `GET /`: Retrieve a list of all booking agents.
 
-     - `POST /add`: Add new booking agents.
+        - `POST /add`: Add new booking agents.
 
-  - `/misc`
+     - [`/misc`](/doc/api/airline-staff/misc.md)
 
-     - `GET /frequent-customer`: Retrieve a list of frequent customers.
+        - `GET /frequent-customer`: Retrieve a list of frequent customers.
 
-     - `GET /report`: Retrieve a report.
+        - `GET /report`: Retrieve a report.
 
-     - `GET /revenue-comparison`: Compare revenue earned.
+        - `GET /revenue-comparison`: Compare revenue earned.
 
-     - `GET /top-destination`: Retrieve top destinations.
+        - `GET /top-destination`: Retrieve top destinations.
 
-     - `POST /grant-permission`: Grant new permissions to users.
+        - `POST /grant-permission`: Grant new permissions to users.

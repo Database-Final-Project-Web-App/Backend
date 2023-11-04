@@ -10,6 +10,10 @@
 
 * [Backend] Backend and database communication via pymysql
 
+## Todo List
+
+- TODO: Update http to https
+
 ## API 
 
 We design and implement a RESTful api. Documentation is [here](./doc/api/README.md)
