@@ -51,8 +51,8 @@ The API is loosely categorized by
       return result
 
 
-    @app.route("/api/customer/flight/my", methods=["GET"])
-    def customer_flight_my():
+    @app.route("/api/booking-agent/ticket/purchase", methods=["GET"])
+    def customer_purchase_ticket():
       # Check if client is customer
       if session.get("user_type") != "customer":
         return "only customer can use this api!", 
@@ -74,8 +74,8 @@ The API is loosely categorized by
       return result 
 
 
-    @app.route("/api/booking-agent/flight/my")
-    def bookingAgent_flight_my():
+    @app.route("/api/booking-agent/ticket/purchase")
+    def bookingAgent_purchase_ticket():
       # Check if client is booking agent
       if session.get("user_type") != "booking-agent":
         return "only booking agent can use this api!", 
