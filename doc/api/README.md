@@ -51,7 +51,7 @@ The API is loosely categorized by
       return result
 
 
-    @app.route("/api/booking-agent/ticket/purchase", methods=["GET"])
+    @app.route("/api/customer/ticket/purchase", methods=["GET"])
     def customer_purchase_ticket():
       # Check if client is customer
       if session.get("user_type") != "customer":
