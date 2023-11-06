@@ -1,4 +1,4 @@
-## Match Feature to APi
+## Match Feature to API
 
 1. View Public Info: All users, whether logged in or not, can
 
@@ -22,7 +22,7 @@
 
    2. If not, login is unsuccessful. A message is displayed indicating this to the user.
    
-   Note: In real applications, members’ passwords are stored as md5/other hashes, not as plain text. This keeps the passwords more secure, in case someone is able to break into the system and see the passwords. You can perform the hash using MySQL’s md5 function or a library provided with your host language.) Once a user has logged in, reservation system should display his/her home page. Also, after other actions or sequences of related actions, are executed, control will return to component that displays the home page.
+   Note: In real applications, members’ passwords are stored as md5/other hashes, not as plain text. This keeps the passwords more secure, in case someone is able to break into the system and see the passwords. You can perform the hash using MySQL’s md5 function or a library provided with your host language. Once a user has logged in, reservation system should display his/her home page. Also, after other actions or sequences of related actions, are executed, control will return to component that displays the home page.
 
    On error, the home page should display:
 

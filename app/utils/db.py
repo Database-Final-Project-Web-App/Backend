@@ -1,3 +1,8 @@
+"""
+This module provides Database-related utilities, including:
+- DB: a class for connecting to a MySQL database
+- ARG: a function for generating sql predicate for a given argument and its value
+"""
 import pymysql
 import json
 import atexit
@@ -52,6 +57,58 @@ class DB:
             return None
 
 
+def ARG(arg_name, arg_val):
+	"""
+	Generate sql predicate for a given argument and its value
+	
+	:param arg_name: the name of the argument
+	:param arg_val: the value of the argument. It can be
+		- a value
+		- a tuple of two number values, representing a range
+		- a tuple of string values, representing a list of values
+		- None, representing no constraint
+        It can't be
+        - a tuple of one / more than two number values
+	:return: the sql predicate (as a string) for the argument
+
+	Example:
+	>>> ARG("airline_name", None)
+	"TRUE"
+
+	>>> ARG("airline_name", "Delta")
+	"airline_name = Delta"
+
+	>>> ARG("arr_airport_name", ("PVG", "JFK", "LAX"))
+	"arr_airport_name IN ('PVG', 'JFK', 'LAX')"
+
+	>>> ARG("price", (100, 200))
+	"price BETWEEN 100 AND 200"
+
+    >>> ARG("price", (100, 200, 300))
+    ValueError: For number value, arg_val should be a tuple of two values
+	"""
+
+    # if arg_val is None, then no constraint
+	if arg_val is None:
+		return "TRUE"
+	
+	# if arg_val is a str, or a not subscriptable data (e.g. int), then it is a value
+	if isinstance(arg_val, str) or not hasattr(arg_val, "__getitem__"):
+		return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+
+	# if not str and subscriptable, then it is a tuple
+
+	# if it's a tuple of string, then it's a list of values
+	if isinstance(arg_val[0], str):
+		return "{arg_name} IN {arg_val}".format(arg_name=arg_name, arg_val=tuple(arg_val))
+	
+    # otherwise, it's a tuple of numbers, representing a range
+    #   As a range, it must be a tuple of two values
+	if len(arg_val) != 2:
+		raise ValueError("For number value, arg_val should be a tuple of two values")
+
+	return "{arg_name} BETWEEN {arg_val[0]} AND {arg_val[1]}".format(arg_name=arg_name, arg_val=arg_val)
+
 
 
 if __name__ == "__main__":
@@ -73,3 +130,4 @@ if __name__ == "__main__":
             print(row)
 
     db.disconnect()
+
