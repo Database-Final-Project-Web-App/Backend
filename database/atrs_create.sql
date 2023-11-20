@@ -8,7 +8,7 @@ Convention of datatype
 
 */
 
-USE atrs;
+#USE atrs;
 
 CREATE TABLE airline(
 	name	VARCHAR(100),
@@ -20,7 +20,7 @@ CREATE TABLE airline_staff(
 	password		VARCHAR(100) NOT NULL,
 	first_name		VARCHAR(100),
 	last_name		VARCHAR(100),
-	date_of_birth	DATE,
+	date_of_birth	TIMESTAMP,
 	permission		VARCHAR(10),
 	airline_name	VARCHAR(100),
 	PRIMARY KEY(username),
@@ -77,7 +77,7 @@ CREATE TABLE customer(
 	passport_number		VARCHAR(100),
 	passport_expiration	VARCHAR(100),
 	passport_country	VARCHAR(100),
-	date_of_birth		DATE,
+	date_of_birth		TIMESTAMP,
 	PRIMARY KEY(email)
 );
 
