@@ -69,35 +69,58 @@ def is_datetime(s: str) -> bool:
 	except ValueError:
 		return False
 
-def ARG(arg_name, arg_val):
+#TODO: Refactor ARG to allow a type input and to deal with datetime
+def ARG(arg_name, arg_type, arg_val):
 	"""
 	Generate sql predicate for a given argument and its value
 	
 	:param arg_name: the name of the argument
-	:param arg_val: the value of the argument. It can be
-		- a value
-		- a tuple of two number values, representing a range
-		- a tuple of string values, representing a list of values
-		- None, representing no constraint
-        It can't be
-        - a tuple of one / more than two number values
+    :param arg_type: the type of the argument. It can be
+        - "string"
+        - "number"
+        - "datetime"
+	:param arg_val: the value of the argument. For each type, it can be
+        - "string"
+            - a string value, representing a value
+            - a tuple of string values, representing a list of values
+            - None, representing no constraint
+        - "number"
+            - a number value, representing a value
+            - a tuple of two number values, representing a range
+            - None, representing no constraint
+        - "datetime"
+            - a datetime string, representing a value
+            - a tuple of two datetime strings, representing a range
+                In this tuple, if one entry is None, then it represents no constraint
+                e.g. 
+                ("2020-01-01 00:00:00", "2020-01-02 00:00:00") represents a range from 2020-01-01 00:00:00 to 2020-01-02 00:00:00
+                ("2020-01-01 00:00:00", None) represents a range from 2020-01-01 00:00:00 to infinity
+                (None, "2020-01-01 00:00:00") represents a range from -infinity to 2020-01-01 00:00:00
+                (None, None) represents no constraint
+            - None, representing no constraint
 	:return: the sql predicate (as a string) for the argument
 
 	Example:
-	>>> ARG("airline_name", None)
+	>>> ARG("airline_name", "string", None)
 	"TRUE"
 
-	>>> ARG("airline_name", "Delta")
+	>>> ARG("airline_name", "string", "Delta")
 	"airline_name = Delta"
 
-	>>> ARG("arr_airport_name", ("PVG", "JFK", "LAX"))
+	>>> ARG("arr_airport_name", "string", ("PVG", "JFK", "LAX"))
 	"arr_airport_name IN ('PVG', 'JFK', 'LAX')"
 
-	>>> ARG("price", (100, 200))
+	>>> ARG("price", "number", (100, 200))
 	"price BETWEEN 100 AND 200"
 
-    >>> ARG("price", (100, 200, 300))
+    >>> ARG("price", "number", (100, 200, 300))
     ValueError: For number value, arg_val should be a tuple of two values
+
+    >>> ARG("arri)
+
+    >>> ARG("departure_date", "datetime", ("2020-01-01 00:00:00", "2020-01-02 00:00:00"))
+    "departure_date BETWEEN '2020-01-01 00:00:00' AND '2020-01-02 00:00:00'"
+
 	"""
 
     # if arg_val is None, then no constraint
@@ -119,9 +142,6 @@ def ARG(arg_name, arg_val):
 	if len(arg_val) != 2:
 		raise ValueError("For number value, arg_val should be a tuple of two values")
 
-	#TODO: Deal with datetime
-
-
 	return "{arg_name} BETWEEN {arg_val[0]} AND {arg_val[1]}".format(arg_name=arg_name, arg_val=arg_val)
 
 
@@ -132,7 +152,7 @@ if __name__ == "__main__":
     # db.connect()
 
     """
-    	flight_num			INT(20),
+    flight_num			INT(20),
 	airline_name		VARCHAR(100),
 	departure_time		DATETIME,
 	arrival_time		DATETIME,
