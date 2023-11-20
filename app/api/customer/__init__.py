@@ -1,0 +1,1 @@
+from app.api.customer.customer_bp import customer_bp

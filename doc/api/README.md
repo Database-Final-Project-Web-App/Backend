@@ -24,6 +24,120 @@ The API is loosely categorized by
 
    e.g. `.../flight/...`
 
+## API Design
+
+### APi for General Features
+
+These api's are for general features that works for all types of users. The input and output of these api shouldn't depend on the user role.
+
+1. **Public Information**
+
+    This group of API is to get public information. It should only accept `GET` request, and the result should be independent from user role.
+
+   - `/public` 
+
+      - [`/flight`](/doc/api/public/flight.md)
+
+        <!-- - `GET /:flight_id`: 
+          Get the detailed info of a specific flight, could be used to render a dedicated page for that flight -->
+
+        - `GET /search`: Allows searching for flights
+
+1. **Authentication**
+
+   - `/auth`
+
+     - [`POST /register`](/doc/api/auth/register.md): 
+       
+       Register a new user.
+
+     - [`POST /login`](/doc/api/auth/login.md):
+  
+       Authenticate and log in a user.
+
+     - [`POST /logout`](/doc/api/auth/logout.md):
+    
+       Log out the currently authenticated user.
+
+### API for Role-Based Features
+
+These api's are for features with one of the following properties
+- is only accessible to certain user role (e.g. update flight status)
+- has different behavior for users with different roles (e.g. register as customer / booking agent / airline staff)
+
+1. **Customer:**
+   
+   - `/customer`
+
+     - [`/flight`](/doc/api/customer/flight.md)
+
+       - `GET /my`: Retrieve flights for the authenticated user 
+
+     - [`/ticket`](/doc/api/customer/ticket.md)
+
+       - `POST /purchase`: Purchase tickets for the authenticated user (directly without an agent).
+
+     - [`misc`](doc/api/customer/misc.md)
+
+       - `GET /spending`: Retrieve spending information for the authenticated user.
+
+2. **Booking Agent:**
+
+   - `/booking-agent`
+
+     - [`/flight`](/doc/api/booking-agent/flight.md)
+
+       - `GET /my`: Retrieve flights for the authenticated user 
+
+     - [`/ticket`](/doc/api/booking-agent/ticket.md)
+
+       - `POST /purchase`: Purchase tickets for the authenticated user (via an agent).
+
+     - [`/misc`](/doc/api/booking-agent/misc.md)
+
+       - `GET /commission`: Retrieve commission information for the authenticated booking agent.
+
+       - `GET /top-customer`: Retrieve top customers for the authenticated booking agent.
+
+3. **Airline Staff:**
+
+   Since airline staff are very different from customers and booking agents, and airline staff has its own access control to deal with, we create separate family of api endpoints for them.
+
+   - `/airline-staff`
+
+     - [`/flight`](/doc/api/airline-staff/flight.md)
+
+       - `GET /my`: Retrieve flights for the authenticated airline staff.
+
+       - `POST /create`: Create a new flight.
+
+       - `POST /change-status`: Change the status of a specific flight.
+
+     - [`/airplane`](/doc/api/airline-staff/airplane.md)
+
+        - `POST /add`: Add a new airplane to the system.
+
+     - [`/airport`](/doc/api/airline-staff/airport.md)
+
+        - `POST /add`: Add a new airport to the system.
+
+     - [`/booking-agent`](/doc/api/airline-staff/booking-agent.md)
+
+        - `GET /all`: Retrieve a list of all booking agents.
+
+        - `POST /add`: Add new booking agents.
+
+     - [`/misc`](/doc/api/airline-staff/misc.md)
+
+        - `GET /frequent-customer`: Retrieve a list of frequent customers.
+
+        - `GET /report`: Retrieve a report.
+
+        - `GET /revenue-comparison`: Compare revenue earned.
+
+        - `GET /top-destination`: Retrieve top destinations.
+
+        - `POST /grant-permission`: Grant new permissions to users.
 
 ## Design Tips
 
@@ -107,117 +221,3 @@ The API is loosely categorized by
 
     2. We can compose different module to implement an api. For example, TODO:
 
-## API Design
-
-### APi for General Features
-
-These api's are for general features that works for all types of users. The input and output of these api shouldn't depend on the user role.
-
-1. **Public Information**
-
-    This group of API is to get public information. It should only accept `GET` request, and the result should be independent from user role.
-
-   - `/public` 
-
-      - [`/flight`](/doc/api/public/flight.md)
-
-        <!-- - `GET /:flight_id`: 
-          Get the detailed info of a specific flight, could be used to render a dedicated page for that flight -->
-
-        - `GET /search`: Allows searching for flights
-
-1. **Authentication**
-
-   - `/auth`
-
-     - [`POST /register`](/doc/api/auth/register.md): 
-       
-       Register a new user.
-
-     - [`POST /login`](/doc/api/auth/login.md):
-  
-       Authenticate and log in a user.
-
-     - [`POST /logout`](/doc/api/auth/logout.md):
-    
-       Log out the currently authenticated user.
-
-### API for Role-Based Features
-
-These api's are for features with one of the following properties
-- is only accessible to certain user role (e.g. update flight status)
-- has different behavior for users with different roles (e.g. register as customer / booking agent / airline staff)
-
-1. **Customer:**
-   
-   - `/customer`
-
-     - [`/flight`](/doc/api/customer/flight.md)
-
-       - `GET /my`: Retrieve flights for the authenticated user 
-
-     - [`/ticket`](/doc/api/customer/ticket.md)
-
-       - `POST /purchase`: Purchase tickets for the authenticated user (directly without an agent).
-
-     - ['misc'](doc/api/customer/misc.md)
-
-       - `GET /spending`: Retrieve spending information for the authenticated user.
-
-2. **Booking Agent:**
-
-   - `/booking-agent`
-
-     - [`/flight`](/doc/api/booking-agent/flight.md)
-
-       - `GET /my`: Retrieve flights for the authenticated user 
-
-     - [`/ticket`](/doc/api/booking-agent/ticket.md)
-
-       - `POST /purchase`: Purchase tickets for the authenticated user (via an agent).
-
-     - [`/misc`](/doc/api/booking-agent/misc.md)
-
-       - `GET /commission`: Retrieve commission information for the authenticated booking agent.
-
-       - `GET /top-customer`: Retrieve top customers for the authenticated booking agent.
-
-3. **Airline Staff:**
-
-  Since airline staff are very different from customers and booking agents, and airline staff has its own access control to deal with, we create separate family of api endpoints for them.
-
-   - `/airline-staff`
-
-     - [`/flight`](/doc/api/airline-staff/flight.md)
-
-       - `GET /my`: Retrieve flights for the authenticated airline staff.
-
-       - `POST /create`: Create a new flight.
-
-       - `PUT /:flight_id/status`: Change the status of a specific flight.
-
-     - [`/airplane`](/doc/api/airline-staff/airplane.md)
-
-        - `POST /add`: Add a new airplane to the system.
-
-     - [`/airport`](/doc/api/airline-staff/airport.md)
-
-        - `POST /add`: Add a new airport to the system.
-
-     - [`/booking-agent`](/doc/api/airline-staff/booking-agent.md)
-
-        - `GET /`: Retrieve a list of all booking agents.
-
-        - `POST /add`: Add new booking agents.
-
-     - [`/misc`](/doc/api/airline-staff/misc.md)
-
-        - `GET /frequent-customer`: Retrieve a list of frequent customers.
-
-        - `GET /report`: Retrieve a report.
-
-        - `GET /revenue-comparison`: Compare revenue earned.
-
-        - `GET /top-destination`: Retrieve top destinations.
-
-        - `POST /grant-permission`: Grant new permissions to users.

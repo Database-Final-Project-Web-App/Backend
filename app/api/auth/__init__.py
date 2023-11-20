@@ -1,0 +1,1 @@
+from app.api.auth.auth_bp import auth_bp
