@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Use GPU",
+            "type": "shell",
+            "command": "touch",
+            "args": ["/d/NYUSH/2023_Fall/Database/final_project/app/Backend/myfile.txt"],
+            "problemMatcher": []
+        }
+    ]
+}
