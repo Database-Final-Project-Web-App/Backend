@@ -41,7 +41,7 @@ These api's are for general features that works for all types of users. The inpu
         <!-- - `GET /:flight_id`: 
           Get the detailed info of a specific flight, could be used to render a dedicated page for that flight -->
 
-        - `GET /search`: Allows searching for flights
+        - `POST /search`: Allows searching for flights
 
 1. **Authentication**
 
