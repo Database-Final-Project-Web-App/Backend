@@ -26,9 +26,13 @@ The API is loosely categorized by
 
 ## API Design
 
-### APi for General Features
+This is a list of content for each api endpoint. The details of each endpoint is documented in a separate page, which is linked in the list below. 
+- For an annotated example, see [here](/app/api/public/flight/flight_bp.py). 
+- [Developer] For an example doc, see [here](/doc/api/public/flight.md).
 
-These api's are for general features that works for all types of users. The input and output of these api shouldn't depend on the user role.
+### API for General Features
+
+These api's are for general features that works for all types of users. The input and output of these api shouldn't depend on the user role. 
 
 1. **Public Information**
 

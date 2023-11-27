@@ -1,10 +1,17 @@
 from flask import Flask 
 
-import app.utils as utils 
+from app.utils.db import DB
 from app.api import api_bp
+
+db_config_path = "config/dummy_config.json"
+db = DB(db_config_path)
 
 app = Flask(__name__)
 
+# add db to app config
+app.config['db'] = db
+
+# register api blueprint
 app.register_blueprint(api_bp, url_prefix='/api')
 
 @app.route('/')

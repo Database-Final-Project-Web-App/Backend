@@ -7,7 +7,7 @@ import pymysql
 import json
 import atexit
 import os
-import datetime
+from datetime import datetime, timedelta
 
 class DB:
     def __init__(self, config_path):
@@ -58,28 +58,137 @@ class DB:
             return None
 
 def is_datetime(s: str) -> bool:
-	"""
-	Check if a string is a valid datetime string
-	:param s: the string to be checked
-	:return: True if the string is a valid datetime string, False otherwise
-	"""
-	try:
-		datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
-		return True
-	except ValueError:
-		return False
+    """
+    Check if a string is a valid datetime string
+    :param s: the string to be checked
+    :return: True if the string is a valid datetime string, False otherwise
+    """
+    try:
+        floor_datetime(s)
+        return True
+    except ValueError:
+        return False
+
+def floor_datetime(s: str) -> str:
+    """
+    Floor YMD, YMDH, YMDHM, YMDHMS to the nearest smaller YMDHMS
+    i.e. largest YMDHMS that is <= s
+
+    floor_datetime is idempotent, i.e. floor_datetime(floor_datetime(s)) == floor_datetime(s)
+
+    :param s: the datetime string to be floored
+    :return: the floored datetime string
+
+    Example:
+    >>> floor_datetime("2020-01-23")
+    "2020-01-23 00:00:00"
+
+    >>> floor_datetime("2020-01-23 11")
+    "2020-01-23 11:00:00" 
+    
+    >>> floor_datetime("2020-01-23 11:34")
+    "2020-01-01 11:34:00"
+
+    >>> floor_datetime("2020-01-23 11:34:56")
+    "2020-01-01 11:34:56"
+    """
+    # is it YMD?
+    try:
+        datetime.strptime(s, "%Y-%m-%d")
+        return s + " 00:00:00"
+    except ValueError:
+        pass
+
+    # is it YMDH?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H")
+        return s + ":00:00"
+    except ValueError:
+        pass
+
+    # is it YMDHM?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H:%M")
+        return s + ":00"
+    except ValueError:
+        pass
+
+    # is it YMDHMS?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+        return s
+    except ValueError:
+        pass
+
+    raise ValueError("Invalid datetime string: {s}".format(s=s))
+
+
+def ceil_datetime(s: str) -> str:
+    """
+    Ceil YMD, YMDH, YMDHM, YMDHMS to the nearest larger YMDHMS
+    i.e. smallest YMDHMS that is >= s 
+
+    ceil_datetime is idempotent, i.e. ceil_datetime(ceil_datetime(s)) == ceil_datetime(s)
+
+    :param s: the datetime string to be ceiled
+    :return: the ceiled datetime string
+
+    Example:
+    >>> ceil_datetime("2020-01-23")
+    "2020-01-23 23:59:59"
+
+    >>> ceil_datetime("2020-01-23 11")
+    "2020-01-23 11:59:59"
+
+    >>> ceil_datetime("2020-01-23 11:34")
+    "2020-01-01 11:34:59"
+
+    >>> ceil_datetime("2020-01-23 11:34:56")
+    "2020-01-01 11:34:56" 
+    """
+    # is it YMD?
+    try:
+        datetime.strptime(s, "%Y-%m-%d")
+        return s + " 23:59:59"
+    except ValueError:
+        pass
+
+    # is it YMDH?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H")
+        return s + ":59:59"
+    except ValueError:
+        pass
+
+    # is it YMDHM?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H:%M")
+        return s + ":59"
+    except ValueError:
+        pass
+
+    # is it YMDHMS?
+    try:
+        datetime.strptime(s, "%Y-%m-%d %H:%M:%S")
+        return s
+    except ValueError:
+        pass
+
+    raise ValueError("Invalid datetime string: {s}".format(s=s))
+
+
 
 #TODO: Refactor ARG to allow a type input and to deal with datetime
-def ARG(arg_name, arg_type, arg_val):
-	"""
-	Generate sql predicate for a given argument and its value
-	
-	:param arg_name: the name of the argument
+def ARG(arg_name: str, arg_type: str, arg_val):
+    """
+    Generate sql predicate for a given argument and its value
+    
+    :param arg_name: the name of the argument
     :param arg_type: the type of the argument. It can be
         - "string"
         - "number"
         - "datetime"
-	:param arg_val: the value of the argument. For each type, it can be
+    :param arg_val: the value of the argument. For each type, it can be
         - "string"
             - a string value, representing a value
             - a tuple of string values, representing a list of values
@@ -98,20 +207,20 @@ def ARG(arg_name, arg_type, arg_val):
                 (None, "2020-01-01 00:00:00") represents a range from -infinity to 2020-01-01 00:00:00
                 (None, None) represents no constraint
             - None, representing no constraint
-	:return: the sql predicate (as a string) for the argument
+    :return: the sql predicate (as a string) for the argument
 
-	Example:
-	>>> ARG("airline_name", "string", None)
-	"TRUE"
+    Example:
+    >>> ARG("airline_name", "string", None)
+    "TRUE"
 
-	>>> ARG("airline_name", "string", "Delta")
-	"airline_name = Delta"
+    >>> ARG("airline_name", "string", "Delta")
+    "airline_name = Delta"
 
-	>>> ARG("arr_airport_name", "string", ("PVG", "JFK", "LAX"))
-	"arr_airport_name IN ('PVG', 'JFK', 'LAX')"
+    >>> ARG("arr_airport_name", "string", ("PVG", "JFK", "LAX"))
+    "arr_airport_name IN ('PVG', 'JFK', 'LAX')"
 
-	>>> ARG("price", "number", (100, 200))
-	"price BETWEEN 100 AND 200"
+    >>> ARG("price", "number", (100, 200))
+    "price BETWEEN 100 AND 200"
 
     >>> ARG("price", "number", (100, 200, 300))
     ValueError: For number value, arg_val should be a tuple of two values
@@ -121,30 +230,70 @@ def ARG(arg_name, arg_type, arg_val):
     >>> ARG("departure_date", "datetime", ("2020-01-01 00:00:00", "2020-01-02 00:00:00"))
     "departure_date BETWEEN '2020-01-01 00:00:00' AND '2020-01-02 00:00:00'"
 
-	"""
+    """
+    if arg_type == "string":
+        if arg_val is None:
+            return "TRUE"
+        if isinstance(arg_val, str):
+            return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+        try:
+            arg_val = tuple(arg_val)
+        except TypeError:
+            raise ValueError("For string value, arg_val should be a string or a tuple of string values, but got {arg_val}".format(arg_val=arg_val)) 
+        if isinstance(arg_val[0], str):
+            return "{arg_name} IN {arg_val}".format(arg_name=arg_name, arg_val=arg_val)
+        raise ValueError("For string value, arg_val should be a string or a tuple of string values, but got {arg_val}".format(arg_val=arg_val))
+    elif arg_type == "number":
+        if arg_val is None:
+            return "TRUE"
+        if isinstance(arg_val, (int, float)):
+            return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+        try:
+            arg_val = tuple(arg_val)
+        except TypeError:
+            raise ValueError("For number value, arg_val should be a number or a tuple of two number values, but got {arg_val}".format(arg_val=arg_val))
+        if len(arg_val) != 2:
+            raise ValueError("For number value, arg_val should be a tuple of two values, but got {arg_val}".format(arg_val=arg_val))
+        return "{arg_name} BETWEEN {arg_val[0]} AND {arg_val[1]}".format(arg_name=arg_name, arg_val=arg_val)
+    elif arg_type == "datetime":
+        if arg_val is None:
+            return "TRUE"
 
-    # if arg_val is None, then no constraint
-	if arg_val is None:
-		return "TRUE"
-	
-	# if arg_val is a str, or a not subscriptable data (e.g. int), then it is a value
-	if isinstance(arg_val, str) or not hasattr(arg_val, "__getitem__"):
-		return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+        if isinstance(arg_val, str):
+            if not is_datetime(arg_val):
+                raise ValueError("For datetime value, arg_val should be a datetime string, but got {arg_val}".format(arg_val=arg_val))
+            arg_val = (floor_datetime(arg_val), ceil_datetime(arg_val))
 
-	# if not str and subscriptable, then it is a tuple
+        try:
+            arg_val = tuple(arg_val)
+        except TypeError:
+            raise ValueError("For datetime value, arg_val should be a datetime string or a tuple of two datetime strings, but got {arg_val}".format(arg_val=arg_val))
+        if len(arg_val) != 2:
+            raise ValueError("For datetime value, arg_val should be a tuple of two values, but got {arg_val}".format(arg_val=arg_val))
 
-	# if it's a tuple of string, then it's a list of values
-	if isinstance(arg_val[0], str):
-		return "{arg_name} IN {arg_val}".format(arg_name=arg_name, arg_val=tuple(arg_val))
-	
-    # otherwise, it's a tuple of numbers, representing a range
-    #   As a range, it must be a tuple of two values
-	if len(arg_val) != 2:
-		raise ValueError("For number value, arg_val should be a tuple of two values")
-
-	return "{arg_name} BETWEEN {arg_val[0]} AND {arg_val[1]}".format(arg_name=arg_name, arg_val=arg_val)
-
-
+        if arg_val[0] is None and arg_val[1] is None:
+            return "TRUE"
+        if arg_val[0] is None:
+            if not is_datetime(arg_val[1]):
+                raise ValueError("For datetime value, arg_val should be a datetime string, but got {arg_val}".format(arg_val=arg_val))
+            return "{arg_name} <= {arg_val_max}".format(
+                arg_name=arg_name, 
+                arg_val_max=ceil_datetime(arg_val[1]))
+        if arg_val[1] is None:
+            if not is_datetime(arg_val[0]):
+                raise ValueError("For datetime value, arg_val should be a datetime string, but got {arg_val}".format(arg_val=arg_val))
+            return "{arg_name} >= {arg_val_min}".format(
+                arg_name=arg_name, 
+                arg_val_min=floor_datetime)
+        if not (is_datetime(arg_val[0]) and is_datetime(arg_val[1])):
+            raise ValueError("For datetime value, arg_val should be a datetime string or a tuple of two datetime strings, but got {arg_val}".format(arg_val=arg_val))
+        return "{arg_name} BETWEEN {arg_val_min} AND {arg_val_max}".format(
+            arg_name=arg_name, 
+            arg_val_min=floor_datetime(arg_val[0]),
+            arg_val_max=ceil_datetime(arg_val[1])
+            )
+    return None
+        
 
 if __name__ == "__main__":
     config_file = "config/dummy_config.json"
@@ -153,18 +302,18 @@ if __name__ == "__main__":
 
     """
     flight_num			INT(20),
-	airline_name		VARCHAR(100),
-	departure_time		DATETIME,
-	arrival_time		DATETIME,
-	price				NUMERIC(15, 5),		
-	status				VARCHAR(10),
-	airplane_id			VARCHAR(10),
-	arr_airport_name	VARCHAR(100),
-	dept_airport_name	VARCHAR(100),
+    airline_name		VARCHAR(100),
+    departure_time		DATETIME,
+    arrival_time		DATETIME,
+    price				NUMERIC(15, 5),		
+    status				VARCHAR(10),
+    airplane_id			VARCHAR(10),
+    arr_airport_name	VARCHAR(100),
+    dept_airport_name	VARCHAR(100),
     """
 
     # Example usage:
-	# name each argument in the query template
+    # name each argument in the query template
     query_tempate = """
     SELECT * 
     FROM {table} 
@@ -175,18 +324,21 @@ if __name__ == "__main__":
     ;
     """
     query = query_tempate.format(
-	    table = "flight",
-		airline_name = ARG("airline_name", ("PVG", "JFK", "LAX")),
-	    price = ARG("price", (135.5, 200.5)),
-	    status = ARG("status", "Upcoming"),
-	    dept_airport_name = ARG("dept_airport_name", None)
+        table = "flight",
+        airline_name = ARG("airline_name", "string", "Delta"),
+        price = ARG("price", "number", (100, 200)),
+        status = ARG("status", "string", None),
+        dept_airport_name = ARG("dept_airport_name", "string", ("PVG", "JFK", "LAX"))
     )
     print(query)
+
+    ARG()
+
     # result = db.execute_query(query)
-	#
+    #
     # if result:
     #     for row in result:
     #         print(row)
-	#
+    #
     # db.disconnect()
 
