@@ -69,5 +69,6 @@ After logging in successfully a user(customer) may do any of the following use c
 
 1. View My flights: Provide various ways for the user to see flights information which he/she purchased. The default should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of dates, specify destination and/or source airport name or city name etc.
     ```mysql-sql
-    SELECT * FROM ticket JOIN flight USING flight_num WHERE {airline_name} AND {departure_time} AND {arrival_time} AND {price} AND {status} AND {}
+   WITH departure AS (SELECT * FROM airport, flight WHERE airport.airport_name = flight.departure_airport)
+    SELECT * FROM ticket JOIN departure USING (flight_num) WHERE {airline_name} AND {departure_time} AND {arrival_time} AND {price} AND {status} AND {city} AND {departure_airport} AND {arrival_airport}
     ```
