@@ -1,14 +1,33 @@
-# Feature to SQL
+# Feature to api and SQL
 ## 
 1. View Public Info: All users, whether logged in or not, can
 
    1. Search for upcoming flights based on source city/airport name, destination city/airport name, date.
+         > `POST /public/flight/search`
+
       ```mysql-sql
-      SELECT * FROM flight WHERE departure_airport IN (SELECT airport_name FROM airport WHERE city = 'city_name') AND arrival_airport IN (SELECT airport_name FROM airport WHERE city = 'city_name') AND departure_time >= 'date';
-       ```
+      WITH flight_city AS
+	   (SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+      FROM airport AS a1, airport AS a2, flight
+      WHERE a1.name = flight.dept_airport_name 
+      AND a2.name = flight.arr_airport_name)
+      SELECT *
+      FROM flight_city
+      WHERE {flight_id}
+      AND {airline_name}
+      AND {arrival_time}
+      AND {departure_time}
+      AND {price}
+      AND {status}
+      AND {airplane_id}
+      AND {arr_airport_name}
+      AND {dept_airport_name}
+      AND {arr_city}
+      AND {dept_city}
+      ```
    2. Will be able to see the flights status based on flight number, arrival/departure date.
       ```mysql-sql
-      SELECT * FROM flight WHERE flight_number = 'flight_number' AND departure_time >= 'date';
+      SELECT * FROM flight WHERE flight_idber = 'flight_idber' AND departure_time >= 'date';
       ```
 2. Register: 3 types of user registrations (Customer, Booking agent, Airline Staff) option via forms.
 
@@ -69,6 +88,6 @@ After logging in successfully a user(customer) may do any of the following use c
 
 1. View My flights: Provide various ways for the user to see flights information which he/she purchased. The default should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of dates, specify destination and/or source airport name or city name etc.
     ```mysql-sql
-   WITH departure AS (SELECT * FROM airport, flight WHERE airport.airport_name = flight.departure_airport)
-    SELECT * FROM ticket JOIN departure USING (flight_num) WHERE {airline_name} AND {departure_time} AND {arrival_time} AND {price} AND {status} AND {city} AND {departure_airport} AND {arrival_airport}
+   WITH flight_city AS (SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city FROM airport as a1, airport as a2, flight WHERE a1.name = flight.dept_airport_name AND a2.name = flight.arr_airport_name;)
+    SELECT * FROM ticket JOIN flight_city USING (flight_id) WHERE {airline_name} AND {departure_time} AND {arrival_time} AND {price} AND {status} AND {city} AND {departure_airport} AND {arrival_airport}
     ```

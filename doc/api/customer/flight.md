@@ -24,7 +24,7 @@ Root Object:
 
 | Name | Type | Description | note |
 | ---- | ---- | ----------- | ---- |
-| flight_num | int | The flight number | |
+| flight_id | int | The flight number | |
 | airline_name | string | The airline name | |
 | departure_time | string | The departure time | format: `YYYY-MM-DD HH:MM` |
 | arrival_time | string | The arrival time | format: `YYYY-MM-DD HH:MM` |

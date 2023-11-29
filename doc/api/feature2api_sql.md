@@ -6,6 +6,27 @@
 
       > `POST /public/flight/search`
 
+      ```mysql-sql
+      WITH flight_city AS
+	   (SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+      FROM airport AS a1, airport AS a2, flight
+      WHERE a1.name = flight.dept_airport_name 
+      AND a2.name = flight.arr_airport_name)
+      SELECT *
+      FROM flight_city
+      WHERE {flight_id}
+      AND {airline_name}
+      AND {arrival_time}
+      AND {departure_time}
+      AND {price}
+      AND {status}
+      AND {airplane_id}
+      AND {arr_airport_name}
+      AND {dept_airport_name}
+      AND {arr_city}
+      AND {dept_city}
+      ```
+
    2. Will be able to see the flights status based on flight number, arrival/departure date.
 
       > `POST /public/flight/search`
@@ -13,6 +34,33 @@
 2. Register: 3 types of user registrations (Customer, Booking agent, Airline Staff) option via forms.
 
    > `POST /auth/register`
+
+   if logintype is customer:
+
+      ```mysql-sql
+      SELECT * 
+      FROM customer
+      WHERE email = {username}
+      AND password = {password}
+      ```
+
+   then insert values to the form
+
+      ```mysql-sql
+      INSERT INTO customer VALUES (
+      {username}, 
+      {name}, 
+      {password}, 
+      {building_number}, 
+      {street}, 
+      {city}, 
+      {state}, 
+      {phone_number}, 
+      {passport_number}, 
+      {passport_expiration}, 
+      {passport_country}, 
+      {date_of_birth})
+      ```
 
 3. Login: 3 types of user login (Customer, Booking agent, Airline Staff). User enters their username (email address will be used as username), x, and password, y, via forms on login page. This data is sent as POST parameters to the login-authentication component, which checks whether there is a tuple in the Person table with username=x and the password = md5(y).
 
@@ -39,6 +87,28 @@ After logging in successfully a user(customer) may do any of the following use c
 1. View My flights: Provide various ways for the user to see flights information which he/she purchased. The default should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of dates, specify destination and/or source airport name or city name etc.
 
    > `POST /customer/flight/my`
+
+   ```mysql-sql
+   WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT * 
+	FROM flight_city NATURAL JOIN ticket
+	WHERE {username}
+	AND {flight_id}
+	AND {airline_name}
+	AND {arrival_time}
+	AND {departure_time}
+	AND {price}
+	AND {status}
+	AND {airplane_id}
+	AND {arr_airport_name}
+	AND {dept_airport_name}
+	AND {arr_city}
+	AND {dept_city}
+   ```
 
 2. Purchase tickets: Customer chooses a flight and purchase ticket for this flight. You may find it easier to implement this along with a use case to search for flights.
 

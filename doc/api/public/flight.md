@@ -16,12 +16,12 @@ Root Object:
 
 | Name | Type | Description | required? | note |
 | ---- | ---- | ----------- | --------- | ---- | 
-| flight_num | number | The flight number | no | |
+| flight_id | number | The flight number | no | |
 | airline_name | string | The airline name | no | |
 | departure_name | string | The departure airport name | no | |
 | arrival_time | string | The arrival time | no | |
 | price | number | The price of the flight | no | |
-| status | string | The status of the flight | no | |
+| status | string | The status of the flight | no | Default: Upcoming|
 | airplane_id | number | The airplane id | no | |
 | arr_airport_name | string | The arrival airport name | no | |
 | dep_airport_name | string | The departure airport name | no | |
@@ -39,7 +39,7 @@ Root Object:
 
 | Name | Type | Description | note |
 | ---- | ---- | ----------- | ---- |
-| flight_num | int | The flight number | |
+| flight_id | int | The flight number | |
 | airline_name | string | The airline name | |
 | departure_time | string | The departure time | format: `YYYY-MM-DD HH:MM` |
 | arrival_time | string | The arrival time | format: `YYYY-MM-DD HH:MM` |
@@ -73,7 +73,7 @@ Response
 	  "arr_airport_name": "SFO",
 	  "departure_time": "2019-12-01 10:00",
 	  "dep_airport_name": "LAX",
-	  "flight_num": 1,
+	  "flight_id": 1,
 	  "price": 150.0,
 	  "status": "upcoming"
 	},
@@ -84,7 +84,7 @@ Response
 	  "arr_airport_name": "SFO",
 	  "departure_time": "2019-12-01 10:00",
 	  "dep_airport_name": "LAX",
-	  "flight_num": 2,
+	  "flight_id": 2,
 	  "price": 240.0,
 	  "status": "upcoming"
 	}

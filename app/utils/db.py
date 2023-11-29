@@ -9,6 +9,8 @@ import atexit
 import os
 from datetime import datetime, timedelta
 
+from flask import current_app
+
 class DB:
     def __init__(self, config_path):
         if not os.path.exists(config_path):
@@ -177,7 +179,47 @@ def ceil_datetime(s: str) -> str:
     raise ValueError("Invalid datetime string: {s}".format(s=s))
 
 
-def ARG(arg_name: str, arg_type: str, arg_val):
+def V_ARG(arg_type: str, arg_val):
+    """
+    Arg for INSERT query. More restricted than WHERE_ARG
+
+    :param arg_type: the type of the argument. It can be
+        - "string"
+        - "number"
+        - "datetime"
+
+    :param arg_val: the value of the argument. For each type, it can be
+        - "string"
+            - a string value, representing a value
+            - None, representing no value
+        - "number"
+            - a number value, representing a value
+            - None, representing no value
+        - "datetime"
+            - a datetime string, representing a value
+            - None, representing no value
+    """
+
+    if arg_type == "string":
+        if arg_val is None:
+            return "NULL"
+        return "'{}'".format(arg_val)
+
+    elif arg_type == "number":
+        if arg_val is None:
+            return "NULL"
+        return arg_val
+
+    elif arg_type == "datetime":
+        if arg_val is None:
+            return "NULL"
+        if not is_datetime(arg_val):
+            raise ValueError("For datetime value, arg_val should be a datetime string, but got {arg_val}".format(arg_val=arg_val))
+        return "\"{}\"".format(floor_datetime(arg_val))
+
+    return None
+
+def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
     """
     Generate sql predicate for a given argument and its value
     
@@ -238,12 +280,18 @@ def ARG(arg_name: str, arg_type: str, arg_val):
     "arrival_date BETWEEN '2020-01-02 10:23:00' AND '2020-01-02 11:59:59'"
 
     """
+    if mode not in ["general", "restricted"]:
+        raise ValueError("mode should be either 'general' or 'restricted'")
+    
     if arg_type == "string":
         if arg_val is None:
             return "TRUE"
 
         if isinstance(arg_val, str):
-            return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+            return "{arg_name} = '{arg_val}'".format(arg_name=arg_name, arg_val=arg_val)
+
+        if mode == "restricted":
+            raise ValueError("For string value, arg_val should be a string, but got {arg_val}".format(arg_val=arg_val))
 
         try:
             arg_val = tuple(arg_val)
@@ -260,6 +308,9 @@ def ARG(arg_name: str, arg_type: str, arg_val):
 
         if isinstance(arg_val, (int, float)):
             return "{arg_name} = {arg_val}".format(arg_name=arg_name, arg_val=repr(arg_val))
+
+        if mode == "restricted":
+            raise ValueError("For number value, arg_val should be a number, but got {arg_val}".format(arg_val=arg_val))
 
         try:
             arg_val = tuple(arg_val)
@@ -279,6 +330,12 @@ def ARG(arg_name: str, arg_type: str, arg_val):
                 raise ValueError("For datetime value, arg_val should be a datetime string, but got {arg_val}".format(arg_val=arg_val))
             arg_val = (floor_datetime(arg_val), ceil_datetime(arg_val))
 
+        if mode == "restricted":
+            return "{arg_name} = \"{arg_val}\"".format(
+                arg_name=arg_name, 
+                arg_val=floor_datetime(arg_val)
+                )
+
         try:
             arg_val = tuple(arg_val)
         except TypeError:
@@ -288,14 +345,72 @@ def ARG(arg_name: str, arg_type: str, arg_val):
 
         if not (is_datetime(arg_val[0]) and is_datetime(arg_val[1])):
             raise ValueError("For datetime value, arg_val should be a datetime string or a tuple of two datetime strings, but got {arg_val}".format(arg_val=arg_val))
-        return "{arg_name} BETWEEN {arg_val_min} AND {arg_val_max}".format(
+        return "{arg_name} BETWEEN \"{arg_val_min}\" AND \"{arg_val_max}\"".format(
             arg_name=arg_name, 
             arg_val_min=floor_datetime(arg_val[0]),
             arg_val_max=ceil_datetime(arg_val[1])
             )
 
     return None
-        
+
+
+def search_flight(
+    flight_id=None,
+    airline_name=None,
+    arrival_time=None,
+    departure_time=None,
+    price=None,
+    status="upcoming",
+    airplane_id=None,
+    arr_airport_name=None,
+    dept_airport_name=None,
+    arr_city=None,
+    dept_city=None
+    ):
+    # define query template
+    query_template = \
+    """
+    WITH flight_city AS
+    (SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+    FROM airport AS a1, airport AS a2, flight
+    WHERE a1.name = flight.dept_airport_name 
+    AND a2.name = flight.arr_airport_name)
+    SELECT *
+    FROM flight_city
+    WHERE {flight_id}
+    AND {airline_name}
+    AND {arrival_time}
+    AND {departure_time}
+    AND {price}
+    AND {status}
+    AND {airplane_id}
+    AND {arr_airport_name}
+    AND {dept_airport_name}
+    AND {arr_city}
+    AND {dept_city}
+    """
+
+    # build query
+    query = query_template.format(
+        flight_id=KV_ARG("flight_id", "number", flight_id),
+        airline_name=KV_ARG("airline_name", "string", airline_name),
+        arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
+        departure_time=KV_ARG("departure_time", "datetime", departure_time),
+        price=KV_ARG("price", "number", price),
+        status=KV_ARG("status", "string", status),
+        airplane_id=KV_ARG("airplane_id", "number", airplane_id),
+        arr_airport_name=KV_ARG("arr_airport_name", "string", arr_airport_name),
+        dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name),
+        arr_city=KV_ARG("arr_city", "string", arr_city),
+        dept_city=KV_ARG("dept_city", "string", dept_city)
+    )
+
+    # execute query (get `db` from app config)
+    db = current_app.config['db']
+    query_result = db.execute_query(query)
+    
+    return query_result
+
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"
@@ -304,7 +419,7 @@ if __name__ == "__main__":
 
     """
     -- flight table
-    flight_num			INT(20),
+    flight_id			INT(20),
     airline_name		VARCHAR(100),
     departure_time		DATETIME,
     arrival_time		DATETIME,
@@ -329,11 +444,11 @@ if __name__ == "__main__":
     """
     query = query_tempate.format(
         table = "flight",
-        airline_name = ARG("airline_name", "string", "Delta"),
-        price = ARG("price", "number", (100, 200)),
-        status = ARG("status", "string", None),
-        dept_airport_name = ARG("dept_airport_name", "string", ("PVG", "JFK", "LAX")), 
-        arrival_time = ARG("arrival_time", "datetime", ("2020-01-02 10:23", "2020-01-02 11"))
+        airline_name = KV_ARG("airline_name", "string", "Delta"),
+        price = KV_ARG("price", "number", (100, 200)),
+        status = KV_ARG("status", "string", None),
+        dept_airport_name = KV_ARG("dept_airport_name", "string", ("PVG", "JFK", "LAX")), 
+        arrival_time = KV_ARG("arrival_time", "datetime", ("2020-01-02 10:23", "2020-01-02 11"))
     )
     print(query)
 

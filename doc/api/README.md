@@ -75,7 +75,7 @@ These api's are for features with one of the following properties
 
      - [`/flight`](/doc/api/customer/flight.md)
 
-       - `GET /my`: Retrieve flights for the authenticated user 
+       - `POST /my`: Retrieve flights for the authenticated user 
 
      - [`/ticket`](/doc/api/customer/ticket.md)
 
@@ -162,8 +162,8 @@ These api's are for features with one of the following properties
       result = None
       # implementation detail
       purchase_query_template = """
-        INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email) 
-        VALUES ({flight_num}, {airline_name}, {customer_email}, {booking_agent_email})
+        INSERT INTO ticket (flight_id, airline_name, customer_email, booking_agent_email) 
+        VALUES ({flight_id}, {airline_name}, {customer_email}, {booking_agent_email})
       """
       db.execute_query(purchase_query_template.format(**query_param))
       return result
@@ -180,7 +180,7 @@ These api's are for features with one of the following properties
       # - we set `booking_agent_email` to None
       query_param = {
         "customer_email": session.get("username"),
-        "flight_num": request.args.get("flight_num"),
+        "flight_id": request.args.get("flight_id"),
         "airline_name": request.args.get("airline_name"),
         "booking_agent_email": None,
       }
@@ -203,7 +203,7 @@ These api's are for features with one of the following properties
       # - we get `booking_agent_email` from session data
       query_param = {
         "customer_email": request.args.get("customer_email"),
-        "flight_num": request.args.get("flight_num"),
+        "flight_id": request.args.get("flight_id"),
         "airline_name": request.args.get("airline_name"),
         "booking_agent_email": session.get("username"),
       }
