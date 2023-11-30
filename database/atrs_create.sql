@@ -78,7 +78,7 @@ CREATE TABLE customer(
     passport_number VARCHAR(100) NOT NULL UNIQUE,
     passport_expiration DATE NOT NULL,
     passport_country VARCHAR(100) NOT NULL,
-    date_of_birth TIMESTAMP NOT NULL,
+    date_of_birth DATE NOT NULL,
     PRIMARY KEY(email)
 );
 
