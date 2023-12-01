@@ -1,13 +1,12 @@
 from flask import Blueprint, request, jsonify, session, current_app
 from datetime import datetime
 
-from app.utils.db import KV_ARG, V_ARG, user_exists
+from app.utils.db import KV_ARG, V_ARG, user_exists, ticket_left
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
 @ticket_bp.route('/purchase', methods=['POST'])
 def purchase_handler():
-	#TODO:
 	"""
 	input: flight_num
 
@@ -35,7 +34,7 @@ def purchase_handler():
 	)
 
 	db = current_app.config["db"]
-	airline_name = db.execute(search_query)["airline_name"]
+	airline_name = db.execute_query(search_query)["airline_name"]
 
 	# search whether the booking agent works for the airline
 	airline_query_template = \
@@ -49,36 +48,18 @@ def purchase_handler():
 		username=KV_ARG("booking_agent_email", "string", username),
 	)
 
-	airline_result = db.execute(airline_query)
+	airline_result = db.execute_query(airline_query)
 	airline_result = [airline["airline_name"] for airline in airline_result]
 	if airline_name not in airline_result:
 		return jsonify({"error": "Booking agent does not work for the airline."}), 400
 	
 	# check whether there is a ticket left
-	# use the number of seat - the number of ticket bought
-	ticket_left_query_template = \
-	"""
-	WITH flight_seat AS
-	(SELECT flight_num, airline_name, airplane_id, seat_num
-	FROM flight NATURAL JOIN airplane)
-	SELECT seat_num - COUNT(ticket_id) AS ticket_left, airline_name, flight_num, airplane_id, seat_num
-	FROM flight_seat NATURAL JOIN ticket
-	WHERE flight_num = {flight_num}
-	AND airline_name = {airline_name}
-	GROUP BY airline_name, flight_num, airplane_id
-	"""
-	
-	ticket_left_query = ticket_left_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_num),
-		airline_name=KV_ARG("airline_name", "string", airline_name)
-	)
-
-	ticket_left = db.execute(ticket_left_query)
-	if ticket_left[0]["ticket_left"] <= 0:
+	ticket_left_result = ticket_left(db, flight_num, airline_name)
+	if not ticket_left_result:
 		return jsonify({"error": "No ticket left."}), 400
 	
 	# check whether the customer exists
-	if not user_exists(db, customer_email, "customer"):
+	if not user_exists(db, customer_email, "customer")[0]:
 		return jsonify({"error": "Customer does not exist."}), 400
 	
 	# get purchase date
@@ -106,7 +87,7 @@ def purchase_handler():
 	)
 
 	try:
-		db.execute(insert_query)
+		db.execute_query(insert_query)
 	except Exception:
 		return jsonify({"error": "Already purchased the ticket."}), 400
 

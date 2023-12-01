@@ -385,6 +385,31 @@ def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
         return True, result 
     return False, None 
 
+# Check if there are tickets left for a flight
+def ticket_left(db, flight_num, airline_name):
+    ticket_left_query_template = \
+	"""
+	WITH flight_seat AS
+	(SELECT flight_num, airline_name, airplane_id, seat_num
+	FROM flight NATURAL JOIN airplane)
+	SELECT seat_num - COUNT(ticket_id) AS ticket_left, airline_name, flight_num, airplane_id, seat_num
+	FROM flight_seat NATURAL JOIN ticket
+	WHERE flight_num = {flight_num}
+	AND airline_name = {airline_name}
+	GROUP BY airline_name, flight_num, airplane_id
+	"""
+	
+    ticket_left_query = ticket_left_query_template.format(
+		flight_num=KV_ARG("flight_num", "string", flight_num),
+		airline_name=KV_ARG("airline_name", "string", airline_name)
+	)
+
+    ticket_left = db.execute_query(ticket_left_query)
+    if ticket_left[0]["ticket_left"] <= 0:
+        return False
+    return True
+
+
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"
     # db = DB(config_file)
