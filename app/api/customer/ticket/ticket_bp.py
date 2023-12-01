@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG, V_ARG
+from app.utils.db import KV_ARG, V_ARG, ticket_left
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
@@ -33,8 +33,13 @@ def purchase_handler():
 	)
 
 	db = current_app.config["db"]
-	airline_name = db.execute(search_query)["airline_name"]
+	airline_name = db.execute_query(search_query)["airline_name"]
 
+	# check whether there is a ticket left
+	ticket_left_result = ticket_left(db, flight_num, airline_name)
+	if not ticket_left_result:
+		return jsonify({"error": "No ticket left."}), 400
+	
 	# get purchase date
 	purchase_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	
@@ -60,7 +65,7 @@ def purchase_handler():
 	)
 
 	try:
-		db.execute(insert_query)
+		db.execute_query(insert_query)
 	except Exception:
 		return jsonify({"error": "Already purchased the ticket."}), 400
 
