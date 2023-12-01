@@ -1,15 +1,19 @@
 from flask import Blueprint, request, jsonify, session, current_app
 
 from app.utils.db import KV_ARG
+from app.utils.auth import is_logged_in, LOGINTYPE
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 @flight_bp.route('/my', methods=['POST'])
 def my_handler():
 	# get username from session
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
 	username = session['user']['username']
-	if username is None:
-		return jsonify({"error": "you must login first"}), 400
+	logintype = session['user']['logintype']
+	if logintype != LOGINTYPE.BOOKING_AGENT:
+		return jsonify({"error": "You must login as booking agent."}), 400
 
 	# define query template
 	search_query_template = \
@@ -84,22 +88,23 @@ def my_handler():
 	# process query result
 	result = []
 	for row in query_result:
-		result.append({
-			"customer_email": row[0],
-			"flight_num": row[1],
-			"airline_name": row[2],
-			"arrival_time": row[3],
-			"departure_time": row[4],
-			"price": row[5],
-			"status": row[6],
-			"airplane_id": row[7],
-			"arr_airport_name": row[8],
-			"dept_airport_name": row[9],
-			"arr_city": row[10],
-			"dept_city": row[11],
-			"ticket_id": row[12],
-			"purchase_date": row[13]
-		})
+			result.append({
+				"flight_num": row[0],
+				"airline_name": row[1],
+				"departure_time": row[2],
+				"arrival_time": row[3],
+				"price": row[4],
+				"status": row[5],
+				"airplane_id": row[6],
+				"arr_airport_name": row[7],
+				"dept_airport_name": row[8],
+				"dept_city": row[9],
+				"arr_city": row[10],
+				"ticket_id": row[11],
+				"customer_email": row[12],
+				"booking_agent_email": row[13],
+				"purchase_date": row[14],
+			})
 
 	if result is None:
 		return jsonify({"error": "Query failed"}), 500

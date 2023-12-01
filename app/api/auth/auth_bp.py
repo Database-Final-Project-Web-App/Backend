@@ -1,7 +1,9 @@
 from flask import Blueprint, request, current_app, jsonify, session, make_response
 
 from app.utils.db import KV_ARG, V_ARG, user_exists
-from app.utils.misc import COOKIE_MAX_AGE, LOGINTYPE
+from app.utils.misc import COOKIE_MAX_AGE
+from app.utils.auth import is_logged_in, LOGINTYPE
+import json
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -9,10 +11,18 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 @auth_bp.route('/register', methods=["POST"])
 def register_handler():
 
+	# check whether user is logged in
+	if is_logged_in():
+		return jsonify({
+			"status": 'error',
+			"message": "User is already logged in"
+		}), 400
+
 	# get parameters from request
-	username = request.form.get('username')
-	password = request.form.get('password')
-	logintype = request.form.get('logintype')
+	data = request.get_json()
+	username = data.get('username', None)
+	password = data.get('password', None)
+	logintype = data.get('logintype', None)
 
 	if logintype is None:
 		return jsonify({
@@ -40,16 +50,16 @@ def register_handler():
 	# define insert template and build query
 	if logintype == 'customer':
 		# get parameters from request
-		name = request.form.get('name')
-		building_number = request.form.get('building_number')
-		street = request.form.get('street')
-		city = request.form.get('city')
-		state = request.form.get('state')
-		phone_number = request.form.get('phone_number')
-		passport_number = request.form.get('passport_number')
-		passport_expiration = request.form.get('passport_expiration')
-		passport_country = request.form.get('passport_country')
-		date_of_birth = request.form.get('date_of_birth')
+		name = data.get('name', None)
+		building_number = data.get('building_number', None)
+		street = data.get('street', None)
+		city = data.get('city', None)
+		state = data.get('state', None)
+		phone_number = data.get('phone_number', None)
+		passport_number = data.get('passport_number', None)
+		passport_expiration = data.get('passport_expiration', None)
+		passport_country = data.get('passport_country', None)
+		date_of_birth = data.get('date_of_birth', None)
 
 		insert_template = \
 		"""
@@ -84,8 +94,8 @@ def register_handler():
 
 	elif logintype == 'booking agent':
 		# get parameters from request
-		booking_agent_id = request.form.get('booking_agent_id')
-		airline_name = request.form.get('airline_name')
+		booking_agent_id = data.get('booking_agent_id', None)
+		airline_name = data.get('airline_name', None)
 
 		insert_template = \
 		"""
@@ -104,11 +114,11 @@ def register_handler():
 
 	elif logintype == 'staff':
 		# get parameters from request
-		first_name = request.form.get('first_name')
-		last_name = request.form.get('last_name')
-		date_of_birth = request.form.get('date_of_birth')
-		permission = request.form.get('permission')
-		airline_name = request.form.get('airline_name')
+		first_name = request.form.get('first_name', default=None)
+		last_name = request.form.get('last_name', default=None)
+		date_of_birth = request.form.get('date_of_birth', default=None)
+		permission = request.form.get('permission', default=None)
+		airline_name = request.form.get('airline_name', default=None)
 		
 		insert_template = \
 		"""
@@ -143,7 +153,7 @@ def register_handler():
 def login_handler():
 
 	# check whether user is logged in
-	if 'user' in session and session['user']['username']:
+	if is_logged_in():
 		return jsonify({
 			"status": 'error',
 			"message": "User is already logged in"
@@ -151,9 +161,9 @@ def login_handler():
 
 	# get parameters from request
 	data = request.get_json()
-	username = data['username']
-	password = data['password']
-	logintype = data['logintype']
+	username = data.get('username', None)
+	password = data.get('password', None)
+	logintype = data.get('logintype', None)
 
 	# validate parameters
 	if logintype is None:
