@@ -10,6 +10,8 @@ class LOGINTYPE:
 	# check if logintype is valid
 	@staticmethod
 	def is_valid(logintype):
+		if logintype is None:
+			return 
 		return logintype in [LOGINTYPE.CUSTOMER, LOGINTYPE.BOOKING_AGENT, LOGINTYPE.AIRLINE_STAFF]
 
 COOKIE_MAX_AGE = 100000000

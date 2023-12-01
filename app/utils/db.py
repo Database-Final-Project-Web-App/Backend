@@ -9,6 +9,8 @@ import atexit
 import os
 from datetime import datetime, timedelta
 
+from app.utils.misc import LOGINTYPE
+
 from flask import current_app
 
 class DB:
@@ -355,20 +357,21 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
 
 
 # Determine whether a user exists
-def user_exists(db, username, password, logintype):
+def user_exists(db, username, logintype):
     user_exists_query = \
     """
     SELECT *
     FROM {logintype}
     WHERE {username}
-    AND {password}
     """
     # Determine whether a valid logintype: customer, booking_agent, airline_staff
+    if not LOGINTYPE.is_valid(logintype):
+        raise Exception("You must choose a correct logintype. Your input logintype is {}".format(logintype))
+    
 
     user_exists_query = user_exists_query.format(
         logintype=logintype,
         username=KV_ARG("username", "string", username),
-        password=KV_ARG("password", "string", password)
     )
 
     result = db.execute_query(user_exists_query)

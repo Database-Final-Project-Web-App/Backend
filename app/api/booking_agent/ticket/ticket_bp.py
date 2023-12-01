@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, current_app
 from datetime import datetime
 
-from app.utils.db import KV_ARG, V_ARG
+from app.utils.db import KV_ARG, V_ARG, user_exists
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
@@ -74,6 +74,12 @@ def purchase_handler():
 	)
 
 	ticket_left = db.execute(ticket_left_query)
+	if ticket_left[0]["ticket_left"] <= 0:
+		return jsonify({"error": "No ticket left."}), 400
+	
+	# check whether the customer exists
+	if not user_exists(db, customer_email, "customer"):
+		return jsonify({"error": "Customer does not exist."}), 400
 	
 	# get purchase date
 	purchase_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
