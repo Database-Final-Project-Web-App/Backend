@@ -28,12 +28,12 @@ VALUES ('agentA@example.com', 'agentApassword', 'Delta Air Lines'),
        ('agentC@example.com', 'agentCpassword', 'Delta Air Lines');
 
 -- Adding booking agents working for different airlines
-INSERT INTO booking_agent_workfor (booking_agent_id, airline_name)
-VALUES (1, 'Delta Air Lines'),
-       (1, 'American Airlines'),
-       (2, 'American Airlines'),
-       (2, 'China Eastern'),
-       (3, 'Delta Air Lines');
+INSERT INTO booking_agent_workfor (booking_agent_email, airline_name)
+VALUES ("agentA@example.com", 'Delta Air Lines'),
+       ('agentA@example.com', 'American Airlines'),
+       ('agentB@example.com', 'American Airlines'),
+       ('agentB@example.com', 'China Eastern'),
+       ('agentC@example.com', 'Delta Air Lines');
 
 -- Adding airplanes to the system
 INSERT INTO airplane (airline_name, seat_num) 
