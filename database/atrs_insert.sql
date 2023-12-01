@@ -47,7 +47,7 @@ INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, a
 VALUES ('China Eastern', '2023-11-01 10:00:00', '2023-11-01 14:00:00', 200.00, 'Upcoming', 1, 'JFK', 'PVG'),
        ('China Eastern', '2023-10-01 10:00:00', '2023-10-01 14:00:00', 250.00, 'InProgress', 1, 'PVG', 'JFK'),
        ('China Eastern', '2023-09-01 10:00:00', '2023-09-01 14:00:00', 300.00, 'Delayed', 1, 'JFK', 'PVG'),
-       ('American Airlines', '2023-12-01 10:00:00', '2023-12-01 15:00:00', 350.00, 'Cancelled', 2, 'LAX', 'HND'),
+       ('American Airlines', '2023-12-01 10:00:00', '2023-12-01 15:00:00', 350.00, 'Upcoming', 2, 'LAX', 'HND'),
        ('Delta Air Lines', '2023-12-02 11:00:00', '2023-12-02 16:00:00', 400.00, 'Delayed', 3, 'LHR', 'LAX');
 
 -- Adding tickets for new flights and customers
