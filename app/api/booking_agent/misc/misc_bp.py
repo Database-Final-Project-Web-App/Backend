@@ -51,7 +51,6 @@ def commision_handler():
 
 @misc_bp.route('/top-customer', methods=['GET'])
 def top_customers_handler():
-	#TODO:
 	# get booking agent username from session
 	username = session['user']['username']
 	# current_date = date.today().strftime("%Y-%m-%d")
@@ -69,7 +68,7 @@ def top_customers_handler():
 	# search for flight within a specific time period, default to 6 months
 	# get the top customers in terms of number of tickets bought
 
-	top__tickets_customer_query_template = \
+	top_tickets_customer_query_template = \
 	"""
 	WITH my_ticket AS
 	(SELECT *
@@ -84,7 +83,7 @@ def top_customers_handler():
 	LIMIT {limit}
 	"""
 
-	top_tickets_customer_query = top__tickets_customer_query_template.format(
+	top_tickets_customer_query = top_tickets_customer_query_template.format(
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
 		limit=KV_ARG("limit", "number", limit)
@@ -98,5 +97,40 @@ def top_customers_handler():
 			"customer_email": row[0],
 			"num_tickets": row[1]
 		})
-		
-	return 'top customer'
+
+	# search for flight within a specific time period, default to 1 year
+	# get the top customers in terms of total commision received
+
+	top_commision_customer_query_template = \
+	"""
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT customer_email, SUM(price * COMMISION_RATE) AS commision
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+	GROUP BY customer_email
+	ORDER BY commision DESC
+	LIMIT {limit}
+	"""
+
+	top_commision_customer_query = top_commision_customer_query_template.format(
+		username=KV_ARG("booking_agent_email", "string", username),
+		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
+		limit=KV_ARG("limit", "number", limit)
+	)
+
+	top_commision_customer = db.execute_query(top_commision_customer_query)
+	top_commision_result = []
+	for row in top_commision_customer:
+		top_commision_result.append({
+			"customer_email": row[0],
+			"commision": row[1]
+		})
+	
+	return jsonify({
+		"top_tickets_customer": top_tickets_result,
+		"top_commision_customer": top_commision_result
+	}), 200
