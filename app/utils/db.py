@@ -428,7 +428,7 @@ def find_permission(db, username):
     find_permission_query_template = \
     """
     SELECT permission
-    FROM airline_staff
+    FROM airline_staff_permission
     WHERE username = {username}
     """
     find_permission_query = find_permission_query_template.format(
