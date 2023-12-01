@@ -23,9 +23,9 @@ VALUES ('customer1@example.com', 'Oliver One', 'password1', '123', 'Street 1', '
 
 -- Adding booking agents working for different airlines
 INSERT INTO booking_agent (email, password, airline_name) 
-VALUES ('agentA@example.com', 'agentApassword', 'Delta Air Lines'),
-       ('agentB@example.com', 'agentBpassword', 'American Airlines'),
-       ('agentC@example.com', 'agentCpassword', 'Delta Air Lines');
+VALUES ('agentA@example.com', 'agentApassword'),
+       ('agentB@example.com', 'agentBpassword'),
+       ('agentC@example.com', 'agentCpassword');
 
 -- Adding booking agents working for different airlines
 INSERT INTO booking_agent_workfor (booking_agent_email, airline_name)
