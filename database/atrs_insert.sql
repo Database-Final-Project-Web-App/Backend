@@ -48,7 +48,7 @@ VALUES ('China Eastern', 100),
 INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, permission, airline_name) 
 VALUES ('adminStaff', 'adminPass', 'Alice', 'Admin', '1975-01-01', 'Admin', 'American Airlines'),
        ('operatorStaff', 'operatorPass', 'Oscar', 'Operator', '1985-01-01', 'Operator', 'Delta Air Lines'),
-       ('normalStaff', 'normalPass', 'Nick', 'Normal', '1995-01-01', NULL, 'American Airlines');
+       ('normalStaff', 'normalPass', 'Nick', 'Normal', '1995-01-01', 'Normal', 'American Airlines');
 
 -- Adding more flights covering various statuses and airlines
 INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name) 
