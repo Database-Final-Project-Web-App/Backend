@@ -28,7 +28,7 @@ def add_handler():
 	VALUES ({airline_name}, {seat_num})
 	"""
 
-	create_airplane_query = db.execute_query(create_airplane_query_template).format(
+	create_airplane_query = create_airplane_query_template.format(
 		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted"),
 		seat_num=KV_ARG("seat_num", "number", seat_num, mode="restricted")
 	)
