@@ -8,6 +8,8 @@ flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 def my_handler():
 	# get username from session
 	username = session['user']['username']
+	if username is None:
+		return jsonify({"error": "you must login first"}), 400
 
 	# define query template
 	search_query_template = \

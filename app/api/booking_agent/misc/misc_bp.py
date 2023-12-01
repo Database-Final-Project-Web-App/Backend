@@ -9,15 +9,17 @@ misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 
 @misc_bp.route('/commision', methods=['GET'])
 def commision_handler():
-	#TODO:
 	# get booking agent username from session
 	username = session['user']['username']
-	current_date = date.today().strftime("%Y-%m-%d")
-	default_date = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+	# current_date = date.today().strftime("%Y-%m-%d")
+	# default_date = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+
+	if username is None:
+		return jsonify({"error": "you must login first"}), 400
 
 	# get parameters from url
-	start_date = request.args.get("start_date", default_date)
-	end_date = request.args.get("end_date", current_date)
+	start_date = request.args.get("start_date", None)
+	end_date = request.args.get("end_date", None)
 
 	# search for flight within a specific time period, default to 30 days
 	# get the total commision, number of tickets sold, and average commision per ticket
@@ -41,9 +43,60 @@ def commision_handler():
 	db = current_app.config["db"]
 	commision = db.execute_query(commision_query)
 	commision = commision[0] if commision else (0.0, 0, 0.0)
-	return 'commision'
+	return jsonify({
+		"commision": commision[0],
+		"num_tickets": commision[1],
+		"avg_commision": commision[2]
+	}), 200
 
 @misc_bp.route('/top-customer', methods=['GET'])
 def top_customers_handler():
 	#TODO:
+	# get booking agent username from session
+	username = session['user']['username']
+	# current_date = date.today().strftime("%Y-%m-%d")
+	# default_date_6_months = (date.today() - timedelta(months=6)).strftime("%Y-%m-%d")
+	# default_date_one_year = (date.today() - timedelta(years=1)).strftime("%Y-%m-%d")
+
+	if username is None:
+		return jsonify({"error": "you must login first"}), 400
+	
+	# get parameters from url
+	start_date = request.args.get("start_date", None)
+	end_date = request.args.get("end_date", None)
+	limit = request.args.get("limit", None)
+
+	# search for flight within a specific time period, default to 6 months
+	# get the top customers in terms of number of tickets bought
+
+	top__tickets_customer_query_template = \
+	"""
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT customer_email, COUNT(*) AS num_tickets
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+	GROUP BY customer_email
+	ORDER BY num_tickets DESC
+	LIMIT {limit}
+	"""
+
+	top_tickets_customer_query = top__tickets_customer_query_template.format(
+		username=KV_ARG("booking_agent_email", "string", username),
+		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
+		limit=KV_ARG("limit", "number", limit)
+	)
+
+	db = current_app.config["db"]
+	top_tickets_customer = db.execute_query(top_tickets_customer_query)
+	top_tickets_result = []
+	for row in top_tickets_customer:
+		top_tickets_result.append({
+			"customer_email": row[0],
+			"num_tickets": row[1]
+		})
+		
 	return 'top customer'

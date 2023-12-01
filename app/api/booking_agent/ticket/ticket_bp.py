@@ -15,6 +15,9 @@ def purchase_handler():
 	"""
 	# get username from session
 	username = session["user"]["username"]
+	if username is None:
+		return jsonify({"error": "you must login first"}), 400
+	
 	# get flight_num from url parameter
 	flight_num = request.args.get("flight_num", None)
 	customer_email = request.args.get("customer_email", None)
@@ -38,15 +41,16 @@ def purchase_handler():
 	airline_query_template = \
 	"""
 	SELECT airline_name
-	FROM booking_agent
+	FROM booking_agent_works_for
 	WHERE {username}
 	"""
 
 	airline_query = airline_query_template.format(
-		username=KV_ARG("email", "string", username),
+		username=KV_ARG("booking_agent_email", "string", username),
 	)
 
 	airline_result = db.execute(airline_query)
+	airline_result = [airline["airline_name"] for airline in airline_result]
 	if airline_name not in airline_result:
 		return jsonify({"error": "Booking agent does not work for the airline."}), 400
 	

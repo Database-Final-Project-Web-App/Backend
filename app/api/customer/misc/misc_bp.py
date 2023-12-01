@@ -9,13 +9,13 @@ misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 def spending_handler():
 	# get parameters
 	username = session["user"]["username"]
-	current_date = date.today().strftime("%Y-%m-%d")
-	default_date = (date.today() - timedelta(days=365)).strftime("%Y-%m-%d")
+	# current_date = date.today().strftime("%Y-%m-%d")
+	# default_date = (date.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 	# data = request.get_json()
 
 	# get parameters from url
-	start_date = request.args.get("start_date", default_date)
-	end_date = request.args.get("end_date", current_date)
+	start_date = request.args.get("start_date", None)
+	end_date = request.args.get("end_date", None)
 
 	# search for flight within a specific time period, default to 1 year, and get the total spending
 	total_query_template = \

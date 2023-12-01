@@ -12,6 +12,13 @@ def register_handler():
 	username = request.form.get('username')
 	password = request.form.get('password')
 	logintype = request.form.get('logintype')
+	booking_agent_id = request.form.get('booking_agent_id')
+
+	if username is None or password is None:
+		return jsonify({
+			"status": 'error',
+			"message": "Username and password are required"
+		}), 400
 
 	# define query template
 	if logintype == 'customer':
@@ -23,12 +30,18 @@ def register_handler():
 		AND password = {password}
 		"""
 	elif logintype == 'booking agent':
+		if booking_agent_id is None:
+			return jsonify({
+				"status": 'error',
+				"message": "Booking agent id is required"
+			}), 400
 		check_query_template = \
 		"""
 		SELECT * 
 		FROM booking_agent
 		WHERE email = {username}
 		AND password = {password}
+		AND booking_agent_id = {booking_agent_id}
 		"""
 	elif logintype == 'staff':
 		check_query_template = \
@@ -46,7 +59,8 @@ def register_handler():
 	# build query
 	check_query = check_query_template.format(
 		username=KV_ARG("username", "string", username),
-		password=KV_ARG("password", "string", password)
+		password=KV_ARG("password", "string", password),
+		booking_agent_id=KV_ARG("booking_agent_id", "string", booking_agent_id)
 	)
 
 	# execute query from app config
@@ -170,6 +184,7 @@ def login_handler():
 	username = request.form.get('username')
 	password = request.form.get('password')
 	logintype = request.form.get('logintype')
+	booking_agent_id = request.form.get('booking_agent_id')
 
 
 	# define query template
@@ -206,7 +221,7 @@ def login_handler():
 	login_query = login_query_template.format(
 		username=V_ARG("string", username),
 		password=V_ARG("string", password),
-		booking_agent_id=V_ARG("string", username)
+		booking_agent_id=V_ARG("string", booking_agent_id)
 	)
 
 	# execute query from app config

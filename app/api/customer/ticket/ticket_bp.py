@@ -14,6 +14,9 @@ def purchase_handler():
 	"""
 	# get username from session
 	username = session["user"]["username"]
+	if username is None:
+		return jsonify({"error": "Please login first."}), 400
+	
 	# get flight_num from url parameter
 	flight_num = request.args.get("flight_num", None)
 
