@@ -61,9 +61,12 @@ VALUES ('China Eastern', '2023-11-01 10:00:00', '2023-11-01 14:00:00', 200.00, '
 -- Adding tickets for new flights and customers
 INSERT INTO ticket (flight_num, airline_name, customer_email, purchase_date)
 VALUES (1, 'China Eastern', 'customer3@example.com', '2023-9-30 10:00:00'),
-       (1, 'China Eastern', 'customer2@example.com', '2023-9-25 10:00:00'),
        (2, 'China Eastern', 'customer2@example.com', '2023-8-30 10:00:00'),
-       (3, 'China Eastern', 'customer1@example.com', '2023-7-30 10:00:00'),
-       (4, 'American Airlines', 'customer1@example.com', '2023-11-30 10:00:00'),
-       (5, 'Delta Air Lines', 'customer4@example.com', '2023-12-01 10:00:00'),
-       (5, 'Delta Air Lines', 'customer3@example.com', '2023-12-01 10:00:00');
+       (3, 'China Eastern', 'customer1@example.com', '2023-7-30 10:00:00');
+
+-- Adding tickets for new flights and customers that are booked by booking agents
+INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
+VALUES (1, 'China Eastern', 'customer2@example.com', 'agentA@example.com', '2023-9-25 10:00:00'),
+       (4, 'American Airlines', 'customer1@example.com', 'agentA@example.com', '2023-11-30 10:00:00'),
+       (5, 'Delta Air Lines', 'customer4@example.com', 'agentA@example.com', '2023-12-01 10:00:00'),
+       (5, 'Delta Air Lines', 'customer3@example.com', 'agentA@example.com', '2023-12-01 10:00:00');
