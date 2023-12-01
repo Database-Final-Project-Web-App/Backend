@@ -88,6 +88,7 @@ CREATE TABLE ticket(
     airline_name VARCHAR(100) NOT NULL,
     customer_email VARCHAR(100) NOT NULL,
     booking_agent_email VARCHAR(100),
+    purchase_date DATETIME NOT NULL,
     PRIMARY KEY(ticket_id),
     FOREIGN KEY(flight_num) REFERENCES flight(flight_num),
     FOREIGN KEY(airline_name) REFERENCES flight(airline_name),
