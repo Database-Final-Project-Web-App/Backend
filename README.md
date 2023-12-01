@@ -12,7 +12,7 @@
 
 ## Todo List
 
-- TODO: Update http to https
+- [ ] limited seat for each flight
 
 ## API 
 

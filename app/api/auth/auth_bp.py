@@ -198,7 +198,7 @@ def login_handler():
 		AND password = {password}
 		"""
 	else:
-		raise Exception("You must choose a logintype.")
+		raise Exception("You must choose a correct logintype.")
 	
 
 	# build query

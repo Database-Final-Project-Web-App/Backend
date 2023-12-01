@@ -42,7 +42,7 @@ def my_handler():
 	arrival_time = data.get("arrival_time", None)
 	departure_time = data.get("departure_time", None)
 	price = data.get("price", None)
-	status = data.get("status", "upcoming")
+	status = data.get("status", None)
 	airplane_id= data.get("airplane_id", None)
 	arr_airport_name = data.get("arr_airport_name", None)
 	dept_airport_name = data.get("dept_airport_name", None)
@@ -95,7 +95,7 @@ def my_handler():
 			"purchase_date": row[12]
 		})
 
-	if len(result) == 0:
-		return jsonify({"error": "No flights found"}), 404
+	if result is None:
+		return jsonify({"error": "Query failed"}), 500
 
 	return jsonify({"flights": result}), 200
