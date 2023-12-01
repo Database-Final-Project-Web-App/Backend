@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, session, current_app
 
-from app.utils.misc import KV_ARG
+from app.utils.db import KV_ARG
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 

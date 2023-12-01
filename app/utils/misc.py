@@ -1,6 +1,8 @@
 def TODO(text=""):
 	assert("TODO: {}".format(text))
 
+COOKIE_MAX_AGE = 100000000
+
 # define constant of logintype
 class LOGINTYPE:
 	CUSTOMER = 'customer'
@@ -14,4 +16,5 @@ class LOGINTYPE:
 			return 
 		return logintype in [LOGINTYPE.CUSTOMER, LOGINTYPE.BOOKING_AGENT, LOGINTYPE.AIRLINE_STAFF]
 
-COOKIE_MAX_AGE = 100000000
+
+COMMISION_RATE = 0.1
