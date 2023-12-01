@@ -1,6 +1,7 @@
-from flask import Blueprint, request, current_app, jsonify, session
+from flask import Blueprint, request, current_app, jsonify, session, make_response
 
 from app.utils.db import KV_ARG, V_ARG
+from app.utils.misc import COOKIE_MAX_AGE
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -167,10 +168,13 @@ def register_handler():
 def login_handler():
 
 	# get parameters from request
-	username = request.form.get('username')
-	password = request.form.get('password')
-	logintype = request.form.get('logintype')
-
+	# username = request.form.get('username')
+	# password = request.form.get('password')
+	# logintype = request.form.get('logintype')
+	data = request.get_json()
+	username = data['username']
+	password = data['password']
+	logintype = data['logintype']
 
 	# define query template
 	if logintype == 'customer':
@@ -198,7 +202,11 @@ def login_handler():
 		AND password = {password}
 		"""
 	else:
-		raise Exception("You must choose a correct logintype.")
+		# breakpoint()
+		return jsonify({
+			"status": 'error',
+			"message": "You must choose a correct logintype."
+		}), 400
 	
 
 	# build query
@@ -209,7 +217,7 @@ def login_handler():
 
 	# execute query from app config
 	db = current_app.config["db"]
-	query_result = db.execute_query(login_query)
+	query_result = db.execute_query(login_query, cursor_type="dict")
 
 	# check if user already exists
 	if query_result is None:
@@ -222,19 +230,42 @@ def login_handler():
 			"status": 'error',
 			"message": "Username does not exist or password is incorrect"
 		}), 400
+
+	username_display = ""
+	if logintype == 'customer':
+		username_display = query_result[0]['name']
+	elif logintype == 'booking agent':
+		username_display = query_result[0]['email']
+	elif logintype == 'staff':
+		username_display = query_result[0]['first_name'] + " " + query_result[0]['last_name']
+	else:
+		raise Exception("You must choose a correct logintype.")
 	
 	# login
 	# session['username'] = username
 	# session['logintype'] = logintype
 	session['user'] = {
 		"username": username,
+		"username_display": username_display,
 		"logintype": logintype
 	}
 
-	return jsonify({
+	response = make_response(jsonify({
 		"status": 'success',
-		"message": "Successfully logged in"
-	}), 200
+		"message": "Successfully logged in",
+		"username_display": username_display,
+	}), 200)
+	
+	response.set_cookie('username', username, max_age=COOKIE_MAX_AGE, path='/')
+	response.set_cookie('username_display', username_display, max_age=COOKIE_MAX_AGE, path='/')
+	response.set_cookie('logintype', logintype, max_age=COOKIE_MAX_AGE, path='/')
+
+	return response
+
+	# return jsonify({
+	# 	"status": 'success',
+	# 	"message": "Successfully logged in"
+	# }), 200
 
 @auth_bp.route('/logout', methods=["POST"])
 def logout_handler():
@@ -243,3 +274,17 @@ def logout_handler():
 		"status": 'success',
 		"message": "Successfully logged out"
 	}), 200
+
+@auth_bp.route('/current_user', methods=["GET"])
+def current_user_handler():
+	if 'user' in session:
+		return jsonify({
+			"status": 'success',
+			"message": "User is logged in",
+			"user": session['user']
+		}), 200
+	else:
+		return jsonify({
+			"status": 'error',
+			"message": "User is not logged in"
+		}), 400

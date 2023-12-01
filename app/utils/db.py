@@ -47,13 +47,19 @@ class DB:
         if self.connection:
             self.connection.close()
 
-    def execute_query(self, sql_query):
+    def execute_query(self, sql_query, cursor_type="list"):
         try:
             if not self.connection:
                 self.connect()
-            with self.connection.cursor() as cursor:
-                cursor.execute(sql_query)
-                result = cursor.fetchall()
+            if cursor_type == "list":
+                cursor = self.connection.cursor()
+            elif cursor_type == "dict":
+                cursor = self.connection.cursor(pymysql.cursors.DictCursor)
+            else:
+                raise ValueError(f"Invalid cursor_type: {cursor_type}")
+            cursor.execute(sql_query)
+            result = cursor.fetchall()
+            cursor.close()
             return result
         except pymysql.Error as e:
             print(f"Error executing SQL query: {e}")
