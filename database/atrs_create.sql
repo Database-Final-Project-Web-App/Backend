@@ -20,10 +20,16 @@ CREATE TABLE airline_staff(
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     date_of_birth DATE,
-    permission VARCHAR(10),
     airline_name VARCHAR(100) NOT NULL,
     PRIMARY KEY(username),
     FOREIGN KEY(airline_name) REFERENCES airline(name)
+);
+
+CREATE TABLE airline_staff_permission(
+    username VARCHAR(100) NOT NULL,
+    permission VARCHAR(10) NOT NULL,
+    PRIMARY KEY(username, permission),
+    FOREIGN KEY(username) REFERENCES airline_staff(username)
 );
 
 CREATE TABLE airplane(
