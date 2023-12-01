@@ -54,6 +54,15 @@ def purchase_handler():
 	if airline_name not in airline_result:
 		return jsonify({"error": "Booking agent does not work for the airline."}), 400
 	
+	# check whether there is a ticket left
+	# use the number of seat - the number of ticket bought
+	ticket_left_query_template = \
+	"""
+	WITH flight_seat AS
+	(SELECT flight_num, airline_name, airplane_id, seats
+	FROM flight NATURAL JOIN airplane)
+	"""
+	
 	# get purchase date
 	purchase_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	

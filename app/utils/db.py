@@ -354,63 +354,29 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
     return None
 
 
-def search_flight(
-  flight_num=None,
-    airline_name=None,
-    arrival_time=None,
-    departure_time=None,
-    price=None,
-    status="upcoming",
-    airplane_id=None,
-    arr_airport_name=None,
-    dept_airport_name=None,
-    arr_city=None,
-    dept_city=None
-    ):
-    # define query template
-    query_template = \
+# Determine whether a user exists
+def user_exists(db, username, password, logintype):
+    user_exists_query = \
     """
-    WITH flight_city AS
-    (SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
-    FROM airport AS a1, airport AS a2, flight
-    WHERE a1.name = flight.dept_airport_name 
-    AND a2.name = flight.arr_airport_name)
     SELECT *
-    FROM flight_city
-    WHERE {flight_id}
-    AND {airline_name}
-    AND {arrival_time}
-    AND {departure_time}
-    AND {price}
-    AND {status}
-    AND {airplane_id}
-    AND {arr_airport_name}
-    AND {dept_airport_name}
-    AND {arr_city}
-    AND {dept_city}
+    FROM {logintype}
+    WHERE {username}
+    AND {password}
     """
+    # Determine whether a valid logintype: customer, booking_agent, airline_staff
+    if logintype not in ["customer", "booking_agent", "airline_staff"]:
+        raise ValueError("Invalid logintype: {logintype}".format(logintype=logintype))
 
-    # build query
-    query = query_template.format(
-      flight_num=KV_ARG("flight_id", "number", flight_id),
-        airline_name=KV_ARG("airline_name", "string", airline_name),
-        arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
-        departure_time=KV_ARG("departure_time", "datetime", departure_time),
-        price=KV_ARG("price", "number", price),
-        status=KV_ARG("status", "string", status),
-        airplane_id=KV_ARG("airplane_id", "number", airplane_id),
-        arr_airport_name=KV_ARG("arr_airport_name", "string", arr_airport_name),
-        dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name),
-        arr_city=KV_ARG("arr_city", "string", arr_city),
-        dept_city=KV_ARG("dept_city", "string", dept_city)
+    user_exists_query = user_exists_query.format(
+        logintype=logintype,
+        username=KV_ARG("username", "string", username),
+        password=KV_ARG("password", "string", password)
     )
 
-    # execute query (get `db` from app config)
-    db = current_app.config['db']
-    query_result = db.execute_query(query)
-    
-    return query_result
-
+    result = db.execute_query(user_exists_query)
+    if result:
+        return True
+    return False
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"
