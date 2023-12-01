@@ -1,6 +1,6 @@
 from flask import Blueprint, request, current_app, jsonify, session
 
-from app.utils.db import KV_ARG, V_ARG
+from app.utils.db import KV_ARG, V_ARG, user_exists
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -12,7 +12,12 @@ def register_handler():
 	username = request.form.get('username')
 	password = request.form.get('password')
 	logintype = request.form.get('logintype')
-	booking_agent_id = request.form.get('booking_agent_id')
+
+	if logintype is None:
+		return jsonify({
+			"status": 'error',
+			"message": "Logintype is required"
+		}), 400
 
 	if username is None or password is None:
 		return jsonify({
@@ -20,59 +25,15 @@ def register_handler():
 			"message": "Username and password are required"
 		}), 400
 
-	# define query template
-	if logintype == 'customer':
-		check_query_template = \
-		"""
-		SELECT * 
-		FROM customer
-		WHERE email = {username}
-		AND password = {password}
-		"""
-	elif logintype == 'booking agent':
-		if booking_agent_id is None:
-			return jsonify({
-				"status": 'error',
-				"message": "Booking agent id is required"
-			}), 400
-		check_query_template = \
-		"""
-		SELECT * 
-		FROM booking_agent
-		WHERE email = {username}
-		AND password = {password}
-		AND booking_agent_id = {booking_agent_id}
-		"""
-	elif logintype == 'staff':
-		check_query_template = \
-		"""
-		SELECT * 
-		FROM airline_staff
-		WHERE username = {username}
-		AND password = {password}
-		"""
-	else:
-		raise Exception("You must choose a logintype.")
-	
-
-
-	# build query
-	check_query = check_query_template.format(
-		username=KV_ARG("username", "string", username),
-		password=KV_ARG("password", "string", password),
-		booking_agent_id=KV_ARG("booking_agent_id", "string", booking_agent_id)
-	)
-
-	# execute query from app config
 	db = current_app.config["db"]
-	query_result = db.execute_query(check_query)
-	
-	# check if user already exists
-	if query_result:
+
+	exist = user_exists(db, username, logintype)
+	if exist:
 		return jsonify({
 			"status": 'error',
-			"message": "User already exists"
+			"message": "Username already exists"
 		}), 400
+			
 	
 	# register
 	# define insert template and build query
@@ -184,65 +145,32 @@ def login_handler():
 	username = request.form.get('username')
 	password = request.form.get('password')
 	logintype = request.form.get('logintype')
-	booking_agent_id = request.form.get('booking_agent_id')
 
-
-	# define query template
-	if logintype == 'customer':
-		login_query_template = \
-		"""
-		SELECT * 
-		FROM customer
-		WHERE email = {username}
-		AND password = {password}
-		"""
-	elif logintype == 'booking agent':
-		login_query_template = \
-		"""
-		SELECT * 
-		FROM booking_agent
-		WHERE email = {username}
-		AND password = {password}
-		AND booking_agent_id = {booking_agent_id}
-		"""
-	elif logintype == 'staff':
-		login_query_template = \
-		"""
-		SELECT * 
-		FROM airline_staff
-		WHERE username = {username}
-		AND password = {password}
-		"""
-	else:
-		raise Exception("You must choose a correct logintype.")
-	
-
-	# build query
-	login_query = login_query_template.format(
-		username=V_ARG("string", username),
-		password=V_ARG("string", password),
-		booking_agent_id=V_ARG("string", booking_agent_id)
-	)
-
-	# execute query from app config
-	db = current_app.config["db"]
-	query_result = db.execute_query(login_query)
-
-	# check if user already exists
-	if query_result is None:
+	# check whether user exists
+	if logintype is None:
 		return jsonify({
 			"status": 'error',
-			"message": "Internal error. Failed to execute query {}".format(login_query)
-		}), 500
-	if len(query_result) == 0:
+			"message": "Logintype is required"
+		}), 400
+
+	if username is None or password is None:
+		return jsonify({
+			"status": 'error',
+			"message": "Username and password are required"
+		}), 400
+
+	db = current_app.config["db"]
+
+	exist = user_exists(db, username, logintype)
+	if not exist:
 		return jsonify({
 			"status": 'error',
 			"message": "Username does not exist or password is incorrect"
 		}), 400
 	
 	# login
-	# session['username'] = username
-	# session['logintype'] = logintype
+	# check whether the user already logged in
+
 	session['user'] = {
 		"username": username,
 		"logintype": logintype
