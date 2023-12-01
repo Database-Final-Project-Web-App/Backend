@@ -50,10 +50,10 @@ CREATE TABLE booking_agent(
 );
 
 CREATE TABLE booking_agent_workfor(
-    booking_agent_id INT NOT NULL,
+    booking_agent_email VARCHAR(100) NOT NULL,
     airline_name VARCHAR(100) NOT NULL,
-    PRIMARY KEY(booking_agent_id, airline_name),
-    FOREIGN KEY(booking_agent_id) REFERENCES booking_agent(booking_agent_id),
+    PRIMARY KEY(booking_agent_email, airline_name),
+    FOREIGN KEY(booking_agent_email) REFERENCES booking_agent(email),
     FOREIGN KEY(airline_name) REFERENCES airline(name)
 );
 
