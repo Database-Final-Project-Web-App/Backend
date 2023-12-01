@@ -165,7 +165,6 @@ def create_handler():
 
 @flight_bp.route('/change-status', methods=["POST"])
 def change_status_handler():
-	#TODO:
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
 	username = session['user']['username']
