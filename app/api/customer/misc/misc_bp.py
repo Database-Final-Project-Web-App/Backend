@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, date, timedelta
-import matplotlib.pyplot as plt
 
 from app.utils.db import KV_ARG
 

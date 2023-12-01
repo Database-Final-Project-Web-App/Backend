@@ -1,11 +1,12 @@
-from flask import Blueprint
+from flask import Blueprint, request, jsonify, session, current_app
+
+from app.utils.misc import KV_ARG
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 @flight_bp.route('/my', methods=['POST'])
 def my_handler():
-	#TODO:
-		# get username from session
+	# get username from session
 	username = session['user']['username']
 
 	# define query template
@@ -18,7 +19,7 @@ def my_handler():
 	AND a2.name = flight.arr_airport_name)
 	SELECT * 
 	FROM flight_city NATURAL JOIN ticket
-	WHERE {username}
+	WHERE {customer_email}
 	AND {flight_id}
 	AND {airline_name}
 	AND {arrival_time}
@@ -30,12 +31,14 @@ def my_handler():
 	AND {dept_airport_name}
 	AND {arr_city}
 	AND {dept_city}
+	AND {booking_agent_email}
 	AND {ticket_id}
 	AND {purchase_date}
 	"""
 
 	# get parameters from json request
 	data = request.get_json()
+	customer_email = data.get("customer_email", None)
 	flight_id = data.get("flight_id", None)
 	airline_name = data.get("airline_name", None)
 	arrival_time = data.get("arrival_time", None)
@@ -52,7 +55,7 @@ def my_handler():
 
 	# build query
 	search_query = search_query_template.format(
-		username=KV_ARG("customer_email", "string", username),
+		customer_email=KV_ARG("customer_email", "string", customer_email),
 		flight_id=KV_ARG("flight_id", "number", flight_id),
 		airline_name=KV_ARG("airline_name", "string", airline_name),
 		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
@@ -64,6 +67,7 @@ def my_handler():
 		dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name),
 		arr_city=KV_ARG("arr_city", "string", arr_city),
 		dept_city=KV_ARG("dept_city", "string", dept_city),
+		booking_agent_email=KV_ARG("booking_agent_email", "string", username),
 		ticket_id=KV_ARG("ticket_id", "string", ticket_id),
 		purchase_date=KV_ARG("purchase_datetime", "datetime", purchase_date)
 	)
@@ -79,23 +83,23 @@ def my_handler():
 	result = []
 	for row in query_result:
 		result.append({
-			"flight_id": row[0],
-			"airline_name": row[1],
-			"arrival_time": row[2],
-			"departure_time": row[3],
-			"price": row[4],
-			"status": row[5],
-			"airplane_id": row[6],
-			"arr_airport_name": row[7],
-			"dept_airport_name": row[8],
-			"arr_city": row[9],
-			"dept_city": row[10],
-			"ticket_id": row[11],
-			"purchase_date": row[12]
+			"customer_email": row[0],
+			"flight_id": row[1],
+			"airline_name": row[2],
+			"arrival_time": row[3],
+			"departure_time": row[4],
+			"price": row[5],
+			"status": row[6],
+			"airplane_id": row[7],
+			"arr_airport_name": row[8],
+			"dept_airport_name": row[9],
+			"arr_city": row[10],
+			"dept_city": row[11],
+			"ticket_id": row[12],
+			"purchase_date": row[13]
 		})
 
 	if result is None:
 		return jsonify({"error": "Query failed"}), 500
 
 	return jsonify({"flights": result}), 200
-	return 'my flight'
