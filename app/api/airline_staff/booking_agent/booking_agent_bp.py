@@ -37,13 +37,13 @@ def all_handler():
 	top_tickets_month_query = top_tickets_query_template.format(
 		airline_name=find_airline_for_staff(db, username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_month_ago, current_date)),
-		limit=KV_ARG("limit", "number", limit)
+		limit=limit
 	)
 
 	top_ticket_year_query = top_tickets_query_template.format(
 		airline_name=find_airline_for_staff(db, username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
-		limit=KV_ARG("limit", "number", limit)
+		limit=limit
 	)
 
 	top_tickets_month_result = db.execute_query(top_tickets_month_query)
@@ -67,7 +67,7 @@ def all_handler():
 	top_commission_year_query = top_commission_query_template.format(
 		airline_name=find_airline_for_staff(db, username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
-		limit=KV_ARG("limit", "number", limit)
+		limit=limit
 	)
 
 	top_commission_year_result = db.execute_query(top_commission_year_query)
@@ -100,7 +100,7 @@ def add_handler():
 	if PERMISSION.ADMIN not in permission:
 		return jsonify({"error": "You don't have the permission to add booking agent."}), 400
 	data = request.get_json()
-	airline = find_airline_for_staff(db, username)
+	airline_name = find_airline_for_staff(db, username)
 	booking_agent_email = data.get("booking_agent_email", None)
 	
 	# check whether the booking agent works for the airline
@@ -113,7 +113,7 @@ def add_handler():
 	"""
 	check_query = check_query_template.format(
 		booking_agent_email=KV_ARG("booking_agent_email", "string", booking_agent_email),
-		airline_name=KV_ARG("airline_name", "string", airline)
+		airline_name=KV_ARG("airline_name", "string", airline_name)
 	)
 	check_result = db.execute_query(check_query)
 	if check_result is None:
@@ -129,7 +129,7 @@ def add_handler():
 	"""
 	add_query = add_query_template.format(
 		booking_agent_email=KV_ARG("booking_agent_email", "string", booking_agent_email),
-		airline_name=KV_ARG("airline_name", "string", airline)
+		airline_name=KV_ARG("airline_name", "string", airline_name)
 	)
 	add_result = db.execute_query(add_query)
 	if add_result is None:

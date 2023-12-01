@@ -86,7 +86,7 @@ def top_customers_handler():
 	top_tickets_customer_query = top_tickets_customer_query_template.format(
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
-		limit=KV_ARG("limit", "number", limit)
+		limit=limit
 	)
 
 	db = current_app.config["db"]
@@ -119,7 +119,7 @@ def top_customers_handler():
 	top_commision_customer_query = top_commision_customer_query_template.format(
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
-		limit=KV_ARG("limit", "number", limit)
+		limit=limit
 	)
 
 	top_commision_customer = db.execute_query(top_commision_customer_query)
