@@ -49,13 +49,19 @@ class DB:
         if self.connection:
             self.connection.close()
 
-    def execute_query(self, sql_query):
+    def execute_query(self, sql_query, cursor_type="list"):
         try:
             if not self.connection:
                 self.connect()
-            with self.connection.cursor() as cursor:
-                cursor.execute(sql_query)
-                result = cursor.fetchall()
+            if cursor_type == "list":
+                cursor = self.connection.cursor()
+            elif cursor_type == "dict":
+                cursor = self.connection.cursor(pymysql.cursors.DictCursor)
+            else:
+                raise ValueError(f"Invalid cursor_type: {cursor_type}")
+            cursor.execute(sql_query)
+            result = cursor.fetchall()
+            cursor.close()
             return result
         except pymysql.Error as e:
             print(f"Error executing SQL query: {e}")
@@ -357,7 +363,7 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
 
 
 # Determine whether a user exists
-def user_exists(db, username, logintype):
+def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
     user_exists_query = \
     """
     SELECT *
@@ -374,10 +380,10 @@ def user_exists(db, username, logintype):
         username=KV_ARG("username", "string", username),
     )
 
-    result = db.execute_query(user_exists_query)
+    result = db.execute_query(user_exists_query, **db_kwargs)
     if result:
-        return True
-    return False
+        return True, result 
+    return False, None 
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"
