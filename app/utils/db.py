@@ -355,7 +355,7 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
 
 
 def search_flight(
-    flight_id=None,
+  flight_num=None,
     airline_name=None,
     arrival_time=None,
     departure_time=None,
@@ -392,7 +392,7 @@ def search_flight(
 
     # build query
     query = query_template.format(
-        flight_id=KV_ARG("flight_id", "number", flight_id),
+      flight_num=KV_ARG("flight_id", "number", flight_id),
         airline_name=KV_ARG("airline_name", "string", airline_name),
         arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
         departure_time=KV_ARG("departure_time", "datetime", departure_time),
@@ -419,7 +419,7 @@ if __name__ == "__main__":
 
     """
     -- flight table
-    flight_id			INT(20),
+  flight_num			INT(20),
     airline_name		VARCHAR(100),
     departure_time		DATETIME,
     arrival_time		DATETIME,

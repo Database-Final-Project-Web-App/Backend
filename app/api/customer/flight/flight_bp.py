@@ -20,7 +20,7 @@ def my_handler():
 	SELECT * 
 	FROM flight_city NATURAL JOIN ticket
 	WHERE {username}
-	AND {flight_id}
+	AND {flight_num}
 	AND {airline_name}
 	AND {arrival_time}
 	AND {departure_time}
@@ -37,7 +37,7 @@ def my_handler():
 
 	# get parameters from json request
 	data = request.get_json()
-	flight_id = data.get("flight_id", None)
+	flight_num = data.get("flight_num", None)
 	airline_name = data.get("airline_name", None)
 	arrival_time = data.get("arrival_time", None)
 	departure_time = data.get("departure_time", None)
@@ -54,7 +54,7 @@ def my_handler():
 	# build query
 	search_query = search_query_template.format(
 		username=KV_ARG("customer_email", "string", username),
-		flight_id=KV_ARG("flight_id", "number", flight_id),
+		flight_num=KV_ARG("flight_num", "number", flight_num),
 		airline_name=KV_ARG("airline_name", "string", airline_name),
 		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
 		departure_time=KV_ARG("departure_time", "datetime", departure_time),
@@ -80,7 +80,7 @@ def my_handler():
 	result = []
 	for row in query_result:
 		result.append({
-			"flight_id": row[0],
+			"flight_num": row[0],
 			"airline_name": row[1],
 			"arrival_time": row[2],
 			"departure_time": row[3],

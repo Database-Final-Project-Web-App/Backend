@@ -23,7 +23,7 @@ def spending_handler():
 	WITH my_ticket AS
 	(SELECT * 
 	FROM ticket JOIN flight
-	USING (flight_id, airline_name))
+	USING (flight_num, airline_name))
 	SELECT SUM(price) AS spending
 	FROM my_ticket
 	WHERE {username}
@@ -45,7 +45,7 @@ def spending_handler():
 	WITH my_ticket AS
 	(SELECT * 
 	FROM ticket JOIN flight
-	USING (flight_id, airline_name))
+	USING (flight_num, airline_name))
 	SELECT SUM(price) AS spending, YEAR(purchase_date) AS year,MONTH(purchase_date) AS month
 	FROM my_ticket
 	WHERE {username}

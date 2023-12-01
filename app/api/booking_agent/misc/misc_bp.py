@@ -21,14 +21,26 @@ def commision_handler():
 
 	# search for flight within a specific time period, default to 30 days
 	# get the total commision, number of tickets sold, and average commision per ticket
-	total_query_template = \
+	commision_query_template = \
 	"""
 	WITH my_ticket AS
 	(SELECT *
 	FROM ticket JOIN flight
-	USING (flight_id, airline_name))
-	SELECT SUM(price * {commision_rate}) AS commision, COUNT(*) AS num_tickets, AVG(price * {commision_rate}) AS avg_commision
+	USING (flight_num, airline_name))
+	SELECT SUM(price * COMMISION_RATE) AS commision, COUNT(*) AS num_tickets, AVG(price * COMMISION_RATE) AS avg_commision
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
 	"""
+
+	commision_query = commision_query_template.format(
+		username=KV_ARG("booking_agent_email", "string", username),
+		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
+	)
+
+	db = current_app.config["db"]
+	commision = db.execute_query(commision_query)
+	commision = commision[0] if commision else (0.0, 0, 0.0)
 	return 'commision'
 
 @misc_bp.route('/top-customer', methods=['GET'])

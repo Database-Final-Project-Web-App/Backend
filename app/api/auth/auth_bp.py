@@ -188,6 +188,7 @@ def login_handler():
 		FROM booking_agent
 		WHERE email = {username}
 		AND password = {password}
+		AND booking_agent_id = {booking_agent_id}
 		"""
 	elif logintype == 'staff':
 		login_query_template = \
@@ -204,7 +205,8 @@ def login_handler():
 	# build query
 	login_query = login_query_template.format(
 		username=V_ARG("string", username),
-		password=V_ARG("string", password)
+		password=V_ARG("string", password),
+		booking_agent_id=V_ARG("string", username)
 	)
 
 	# execute query from app config

@@ -1,32 +1,32 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG
+from app.utils.db import KV_ARG, V_ARG
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
 @ticket_bp.route('/purchase', methods=["POST"])
 def purchase_handler():
 	"""
-	input: flight_id
+	input: flight_num
 
 	
 	"""
 	# get username from session
 	username = session["user"]["username"]
-	# get flight_id from url parameter
-	flight_id = request.args.get("flight_id", None)
+	# get flight_num from url parameter
+	flight_num = request.args.get("flight_num", None)
 
 	# get flight info
 	search_query_template = \
 	"""
 	SELECT airline_name
 	FROM flight
-	WHERE flight_id = {flight_id}
+	WHERE flight_num = {flight_num}
 	"""
 
 	search_query = search_query_template.format(
-		flight_id=KV_ARG("flight_num", "string", flight_id)
+		flight_num=KV_ARG("flight_num", "string", flight_num)
 	)
 
 	db = current_app.config["db"]
@@ -39,7 +39,7 @@ def purchase_handler():
 	# insert into ticket table
 	insert_query_template = \
 	"""
-	INSERT INTO ticket (flight_id, airline_name, customer_email, booking_agent_id, purchase_date)
+	INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_id, purchase_date)
 	VALUES (
 		{flight_num},
 		{airline_name},
@@ -49,11 +49,11 @@ def purchase_handler():
 	)
 	"""
 	insert_query = insert_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_id, mode="restricted"),
-		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted"),
-		customer_email=KV_ARG("customer_email", "string", username, mode="restricted"),
-		booking_agent_id=KV_ARG("booking_agent_email", "string", None, mode="restricted"),
-		purchase_date=KV_ARG("purchase_date", "datetime", purchase_datetime, mode="restricted")
+		flight_num=V_ARG("string", flight_num),
+		airline_name=V_ARG("string", airline_name),
+		customer_email=V_ARG("string", username),
+		booking_agent_id=V_ARG("string", None),
+		purchase_date=V_ARG("datetime", purchase_datetime)
 	)
 
 	try:
