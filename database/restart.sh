@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Connect to the MySQL server, replace user and pass with your MySQL username and password
-/d/Xampp/mysql/bin/mysql.exe -u root <<EOF
+mysql -u root <<EOF
 
 -- Step 1: Drop the "atrs" database
 DROP DATABASE IF EXISTS atrs;

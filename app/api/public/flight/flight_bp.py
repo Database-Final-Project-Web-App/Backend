@@ -7,6 +7,29 @@ flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 @flight_bp.route('/search', methods=["POST"])
 def search_handler():
+	# define query template
+	query_template = \
+	"""
+	WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT *
+	FROM flight_city
+	WHERE {flight_id}
+	AND {airline_name}
+	AND {arrival_time}
+	AND {departure_time}
+	AND {price}
+	AND {status}
+	AND {airplane_id}
+	AND {arr_airport_name}
+	AND {dept_airport_name}
+	AND {arr_city}
+	AND {dept_city}
+	"""
+
 	# get parameters from json request
 	data = request.get_json()
 	flight_id = data.get("flight_id", None)
@@ -21,19 +44,24 @@ def search_handler():
 	arr_city = data.get("arr_city", None)
 	dept_city = data.get("dept_city", None)
 
-	query_result = search_flight(
-		flight_id=flight_id,
-		airline_name=airline_name,
-		arrival_time=arrival_time,
-		departure_time=departure_time,
-		price=price,
-		status=status,
-		airplane_id=airplane_id,
-		arr_airport_name=arr_airport_name,
-		dept_airport_name=dept_airport_name,
-		arr_city=arr_city,
-		dept_city=dept_city
+	# build query
+	query = query_template.format(
+		flight_id=KV_ARG("flight_id", "number", flight_id),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
+		departure_time=KV_ARG("departure_time", "datetime", departure_time),
+		price=KV_ARG("price", "number", price),
+		status=KV_ARG("status", "string", status),
+		airplane_id=KV_ARG("airplane_id", "number", airplane_id),
+		arr_airport_name=KV_ARG("arr_airport_name", "string", arr_airport_name),
+		dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name),
+		arr_city=KV_ARG("arr_city", "string", arr_city),
+		dept_city=KV_ARG("dept_city", "string", dept_city)
 	)
+
+	# execute query (get `db` from app config)
+	db = current_app.config['db']
+	query_result = db.execute_query(query)
 
 	if query_result is None:
 		return jsonify({
