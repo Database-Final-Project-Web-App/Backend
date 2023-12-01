@@ -45,10 +45,19 @@ VALUES ('China Eastern', 100),
 -- "Admin" permission staff can create flights, add airplanes/airports, grant permissions
 -- "Operator" permission staff can change flight status
 -- NULL permission staff can only view flights
-INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, permission, airline_name) 
-VALUES ('adminStaff', 'adminPass', 'Alice', 'Admin', '1975-01-01', 'Admin', 'American Airlines'),
-       ('operatorStaff', 'operatorPass', 'Oscar', 'Operator', '1985-01-01', 'Operator', 'Delta Air Lines'),
-       ('normalStaff', 'normalPass', 'Nick', 'Normal', '1995-01-01', 'Normal', 'American Airlines');
+INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name) 
+VALUES ('adminStaff1', 'adminPass1', 'Alice', 'Admin', '1975-01-01', 'American Airlines'),
+       ('adminStaff2', 'adminPass2', 'Allen', 'Admin', '1976-01-01', 'Delta Air Lines'),
+       ('operatorStaff1', 'operatorPass1', 'Oscar', 'Operator', '1985-01-01', 'Delta Air Lines'),
+       ('normalStaff1', 'normalPass1', 'Nick', 'Normal', '1995-01-01', 'American Airlines');
+
+-- Add permission to all staff
+INSERT INTO airline_staff_permission (username, permission)
+VALUES ('adminStaff1', 'Admin'),
+       ('adminStaff2', 'Admin'),
+       ('adminStaff2', 'Operator'),
+       ('operatorStaff1', 'Operator');
+
 
 -- Adding more flights covering various statuses and airlines
 INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name) 
