@@ -49,6 +49,14 @@ CREATE TABLE booking_agent(
     FOREIGN KEY(airline_name) REFERENCES airline(name)
 );
 
+CREATE TABLE booking_agent_workfor(
+    booking_agent_id INT NOT NULL,
+    airline_name VARCHAR(100) NOT NULL,
+    PRIMARY KEY(booking_agent_id, airline_name),
+    FOREIGN KEY(booking_agent_id) REFERENCES booking_agent(booking_agent_id),
+    FOREIGN KEY(airline_name) REFERENCES airline(name)
+);
+
 CREATE TABLE flight(
     flight_num INT AUTO_INCREMENT NOT NULL,
     airline_name VARCHAR(100) NOT NULL,
