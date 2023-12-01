@@ -9,7 +9,7 @@ import atexit
 import os
 from datetime import datetime, timedelta
 
-from app.utils.auth import LOGINTYPE
+from app.utils.auth import LOGINTYPE, PERMISSION
 
 from flask import current_app
 
@@ -422,6 +422,20 @@ def find_airline(db, username):
     )
     airline_name = db.execute_query(find_airline_query)
     return airline_name[0]["airline_name"]
+
+# find the permission of a staff
+def find_permission(db, username):
+    find_permission_query_template = \
+    """
+    SELECT permission
+    FROM airline_staff
+    WHERE username = {username}
+    """
+    find_permission_query = find_permission_query_template.format(
+        username=KV_ARG("username", "string", username)
+    )
+    permission = db.execute_query(find_permission_query)
+    return permission[0]["permission"]
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"

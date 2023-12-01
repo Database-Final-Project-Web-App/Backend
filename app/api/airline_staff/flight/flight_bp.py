@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG, find_airline
-from app.utils.auth import is_logged_in, LOGINTYPE
+from app.utils.db import KV_ARG, find_airline, find_permission
+from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
@@ -107,8 +107,9 @@ def my_handler():
 
 @flight_bp.route('/create', methods=["POST"])
 def create_handler():
-	#TODO:
 	# get username from session
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
 	username = session['user']['username']
 	logintype = session['user']['logintype']
 	db = current_app.config["db"]
@@ -116,22 +117,13 @@ def create_handler():
 	if logintype != 'airline_staff':
 		return jsonify({"error": "you must login as airline staff"}), 400
 	else:
-		permission_query_template = \
-		"""
-		SELECT permission
-		FROM airline_staff
-		WHERE username = {username}
-		"""
-		permission_query = permission_query_template.format(
-			username=KV_ARG("username", "string", username)
-		)
-		permission = db.execute_query(permission_query)[0]["permission"]
-		if permission != 'Admin':
+		permission = find_permission(db, username)
+		if PERMISSION.ADMIN not in permission:
 			return jsonify({"error": "you don't have the permission to create flight"}), 400
 	
 	# get parameters from json request
 	data = request.get_json()
-	airline_name = data.get("airline_name", None)
+	airline_name = find_airline(db, username)
 	departure_time = data.get("departure_time", None)
 	arrival_time = data.get("arrival_time", None)
 	price = data.get("price", None)
@@ -174,5 +166,42 @@ def create_handler():
 @flight_bp.route('/change-status', methods=["POST"])
 def change_status_handler():
 	#TODO:
-	return 'change flight status'
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
+	username = session['user']['username']
+	logintype = session['user']['logintype']
+	db = current_app.config["db"]
+	if logintype != LOGINTYPE.AIRLINE_STAFF:
+		return jsonify({"error": "You must login as airline staff."}), 400
+	else:
+		permission = find_permission(db, username)
+		if PERMISSION.OPERATOR not in permission:
+			return jsonify({"error": "you don't have the permission to change flight status"}), 400
+		
+	# get parameters from json request
+	data = request.get_json()
+	airline_name = find_airline(db, username)
+	flight_num = data.get("flight_num", None)
+	status = data.get("status", None)
+
+	# build query
+	change_status_query_template = \
+	"""
+	UPDATE flight
+	SET status = {status}
+	WHERE airline_name = {airline_name}
+	AND flight_num = {flight_num}
+	"""
+
+	change_status_query = change_status_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		flight_num=KV_ARG("flight_num", "number", flight_num),
+		status=KV_ARG("status", "string", status)
+	)
+
+	# execute query
+	change_status_result = db.execute_query(change_status_query)
+	if change_status_result is None:
+		return jsonify({"error": "Query failed"}), 500
+	return jsonify({"status": "success"}), 200
 
