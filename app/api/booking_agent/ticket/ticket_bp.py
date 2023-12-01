@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, current_app
 from datetime import datetime
 
-from app.utils.misc import KV_ARG, V_ARG
+from app.utils.db import KV_ARG, V_ARG
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
@@ -59,9 +59,21 @@ def purchase_handler():
 	ticket_left_query_template = \
 	"""
 	WITH flight_seat AS
-	(SELECT flight_num, airline_name, airplane_id, seats
+	(SELECT flight_num, airline_name, airplane_id, seat_num
 	FROM flight NATURAL JOIN airplane)
+	SELECT seat_num - COUNT(ticket_id) AS ticket_left, airline_name, flight_num, airplane_id, seat_num
+	FROM flight_seat NATURAL JOIN ticket
+	WHERE flight_num = {flight_num}
+	AND airline_name = {airline_name}
+	GROUP BY airline_name, flight_num, airplane_id
 	"""
+	
+	ticket_left_query = ticket_left_query_template.format(
+		flight_num=KV_ARG("flight_num", "string", flight_num),
+		airline_name=KV_ARG("airline_name", "string", airline_name)
+	)
+
+	ticket_left = db.execute(ticket_left_query)
 	
 	# get purchase date
 	purchase_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

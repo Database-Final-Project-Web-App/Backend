@@ -364,8 +364,6 @@ def user_exists(db, username, password, logintype):
     AND {password}
     """
     # Determine whether a valid logintype: customer, booking_agent, airline_staff
-    if logintype not in ["customer", "booking_agent", "airline_staff"]:
-        raise ValueError("Invalid logintype: {logintype}".format(logintype=logintype))
 
     user_exists_query = user_exists_query.format(
         logintype=logintype,
