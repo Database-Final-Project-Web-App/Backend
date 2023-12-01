@@ -83,14 +83,17 @@ CREATE TABLE customer(
 );
 
 CREATE TABLE ticket(
-	ticket_id				VARCHAR(10),
-	flight_num				INT(20),
-	airline_name			VARCHAR(100),
-	customer_email			VARCHAR(100),
-	booking_agent_email		VARCHAR(100),
-	PRIMARY KEY(ticket_id),
-	FOREIGN KEY(flight_num) REFERENCES flight(flight_num),
-	FOREIGN KEY(airline_name) REFERENCES airline(name),
-	FOREIGN KEY(customer_email) REFERENCES customer(email),
-	FOREIGN KEY(booking_agent_email) REFERENCES booking_agent(email)
+    ticket_id INT AUTO_INCREMENT,
+    flight_num INT NOT NULL,
+    airline_name VARCHAR(100) NOT NULL,
+    customer_email VARCHAR(100) NOT NULL,
+    booking_agent_email VARCHAR(100),
+    purchase_date DATETIME NOT NULL,
+    PRIMARY KEY(ticket_id),
+    FOREIGN KEY(flight_num) REFERENCES flight(flight_num),
+    FOREIGN KEY(airline_name) REFERENCES flight(airline_name),
+    /* FOREIGN KEY(flight_num, airline_name) REFERENCES flight(flight_num, airline_name), */
+
+    FOREIGN KEY(customer_email) REFERENCES customer(email),
+    FOREIGN KEY(booking_agent_email) REFERENCES booking_agent(email)
 );
