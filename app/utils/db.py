@@ -9,7 +9,7 @@ import atexit
 import os
 from datetime import datetime, timedelta
 
-from app.utils.misc import LOGINTYPE
+from app.utils.auth import LOGINTYPE
 
 from flask import current_app
 
@@ -409,6 +409,19 @@ def ticket_left(db, flight_num, airline_name):
         return False
     return True
 
+# find the airline a staff works for
+def find_airline(db, username):
+    find_airline_query_template = \
+    """
+    SELECT airline_name
+    FROM airline_staff
+    WHERE username = {username}
+    """
+    find_airline_query = find_airline_query_template.format(
+        username=KV_ARG("username", "string", username)
+    )
+    airline_name = db.execute_query(find_airline_query)
+    return airline_name[0]["airline_name"]
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"

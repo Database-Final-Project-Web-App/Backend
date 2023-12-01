@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, session, current_app
 from datetime import datetime
 
 from app.utils.db import KV_ARG, V_ARG, user_exists, ticket_left
+from app.utils.auth import is_logged_in, LOGINTYPE
 
 ticket_bp = Blueprint('ticket', __name__, url_prefix='/ticket')
 
@@ -13,10 +14,13 @@ def purchase_handler():
 	
 	"""
 	# get username from session
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
 	username = session["user"]["username"]
-	if username is None:
-		return jsonify({"error": "you must login first"}), 400
-	
+	logintype = session["user"]["logintype"]
+	if logintype != LOGINTYPE.BOOKING_AGENT:
+		return jsonify({"error": "You must login as booking agent."}), 400
+
 	# get flight_num from url parameter
 	flight_num = request.args.get("flight_num", None)
 	customer_email = request.args.get("customer_email", None)
