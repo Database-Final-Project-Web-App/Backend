@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app, session
-from app.utils.db import KV_ARG, find_airline, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 airplane_bp = Blueprint('airplane', __name__, url_prefix='/airplane')
@@ -17,7 +17,7 @@ def add_handler():
 	permission = find_permission(db, username)
 	if PERMISSION.ADMIN not in permission:
 		return jsonify({"error": "You don't have the permission to add airplane."}), 400
-	airline_name = find_airline(db, username)
+	airline_name = find_airline_for_staff(db, username)
 	data = request.get_json()
 	seat_num = data.get("seat_num", None)
 

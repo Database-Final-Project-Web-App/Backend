@@ -410,7 +410,7 @@ def ticket_left(db, flight_num, airline_name):
     return True
 
 # find the airline a staff works for
-def find_airline(db, username):
+def find_airline_for_staff(db, username):
     find_airline_query_template = \
     """
     SELECT airline_name
@@ -436,6 +436,24 @@ def find_permission(db, username):
     )
     permission = db.execute_query(find_permission_query)
     return permission[0]["permission"]
+
+# is value in table
+def is_value_in_table(db, table, column, value, datatype):
+    is_value_in_table_query_template = \
+    """
+    SELECT *
+    FROM {table}
+    WHERE {column} = {value}
+    """
+    is_value_in_table_query = is_value_in_table_query_template.format(
+        table=table,
+        column=column,
+        value=V_ARG(datatype, value)
+    )
+    result = db.execute_query(is_value_in_table_query)
+    if result:
+        return True
+    return False
 
 if __name__ == "__main__":
     # config_file = "config/dummy_config.json"

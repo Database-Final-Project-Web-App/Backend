@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app, session
-from app.utils.db import KV_ARG, find_airline, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 airport_bp = Blueprint('airport', __name__, url_prefix='/airport')
