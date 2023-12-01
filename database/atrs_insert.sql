@@ -28,10 +28,10 @@ VALUES ('agentA@example.com', 'agentApassword', 'Delta Air Lines'),
        ('agentC@example.com', 'agentCpassword', 'Delta Air Lines');
 
 -- Adding airplanes to the system
-INSERT INTO airplane (airline_name) 
-VALUES ('China Eastern'),
-       ('American Airlines'), 
-       ('Delta Air Lines');
+INSERT INTO airplane (airline_name, seat_num) 
+VALUES ('China Eastern', 100),
+       ('American Airlines', 200),
+       ('Delta Air Lines', 300);
 
 -- Adding airline staff with different permissions and airlines
 -- "Admin" permission staff can create flights, add airplanes/airports, grant permissions

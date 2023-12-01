@@ -29,6 +29,7 @@ CREATE TABLE airline_staff(
 CREATE TABLE airplane(
     airplane_id INT AUTO_INCREMENT,
     airline_name VARCHAR(100) NOT NULL,
+    seat_num INT NOT NULL,
     PRIMARY KEY(airplane_id),
     FOREIGN KEY(airline_name) REFERENCES airline(name)
 );
