@@ -66,7 +66,7 @@ CREATE TABLE flight(
     airline_name VARCHAR(100) NOT NULL,
     departure_time DATETIME NOT NULL,
     arrival_time DATETIME NOT NULL,
-    price NUMERIC(15, 5) NOT NULL,
+    price NUMERIC(15, 2) NOT NULL,
     status VARCHAR(10) NOT NULL,
     airplane_id INT NOT NULL,
     arr_airport_name VARCHAR(100) NOT NULL,
