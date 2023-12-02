@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 from app.utils.auth import LOGINTYPE, PERMISSION
 
-from flask import current_app
+from flask import current_app, jsonify 
 
 class DB:
     def __init__(self, config_path):
@@ -40,7 +40,6 @@ class DB:
                 user=self.config['user'],
                 password=self.config['password'],
                 database=self.config['database'],
-                autocommit=True, 
             )
         except pymysql.Error as e:
             print(f"Error connecting to MySQL: {e}")
@@ -67,6 +66,10 @@ class DB:
         except pymysql.Error as e:
             print(f"Error executing SQL query: {e}")
             return None
+    
+    def commit(self):
+        self.connection.commit()
+
 
 def is_datetime(s: str) -> bool:
     """
@@ -452,7 +455,13 @@ def is_value_in_table(db, table, column, value, datatype):
         value=V_ARG(datatype, value)
     )
     result = db.execute_query(is_value_in_table_query)
-    if result:
+    breakpoint();
+    if result is None:
+        return jsonify({
+            "status": 'error',
+            "message": "Internal error"
+        }), 500
+    if len(result) > 0:
         return True
     return False
 

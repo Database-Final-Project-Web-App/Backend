@@ -50,8 +50,7 @@ CREATE TABLE booking_agent(
     email VARCHAR(100) NOT NULL,
     password VARCHAR(100) NOT NULL,
     booking_agent_id INT NOT NULL AUTO_INCREMENT UNIQUE,
-    PRIMARY KEY(email),
-    FOREIGN KEY(airline_name) REFERENCES airline(name)
+    PRIMARY KEY(email)
 );
 
 CREATE TABLE booking_agent_workfor(

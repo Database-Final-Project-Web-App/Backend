@@ -22,7 +22,7 @@ VALUES ('customer1@example.com', 'Oliver One', 'password1', '123', 'Street 1', '
        ('customer4@example.com', 'Freddie Four', 'password4', '101', 'Street 4', 'City 4', 'State 4', '2222222222', 'P45678901', '2028-12-31', 'Country 4', '1993-01-01');
 
 -- Adding booking agents working for different airlines
-INSERT INTO booking_agent (email, password, airline_name) 
+INSERT INTO booking_agent (email, password) 
 VALUES ('agentA@example.com', 'agentApassword'),
        ('agentB@example.com', 'agentBpassword'),
        ('agentC@example.com', 'agentCpassword');

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, current_app, jsonify, session, make_response
 
-from app.utils.db import KV_ARG, V_ARG, user_exists
+from app.utils.db import KV_ARG, V_ARG, is_value_in_table
 from app.utils.misc import COOKIE_MAX_AGE
 from app.utils.auth import is_logged_in, LOGINTYPE
 import json
@@ -44,11 +44,23 @@ def register_handler():
 
 	db = current_app.config["db"]
 
-	exist, result = user_exists(db, username, logintype)
+	# check if username exists
+	username_tablename = {
+		LOGINTYPE.CUSTOMER: "email",
+		LOGINTYPE.BOOKING_AGENT: "email",
+		LOGINTYPE.AIRLINE_STAFF: "username",
+	}[logintype]
+	exist = is_value_in_table(
+		db = db,
+		table = logintype,
+		column = username_tablename,
+		value = username,
+		datatype= "string"
+	)
 	if exist:
 		return jsonify({
 			"status": 'error',
-			"message": "Username already exists"
+			"message": 'User already exists'
 		}), 400
 			
 	
@@ -100,34 +112,40 @@ def register_handler():
 		)
 
 	elif logintype == LOGINTYPE.BOOKING_AGENT:
-		# get parameters from request
-		airline_name = data.get('airline_name', None)
-
-		# check if airline_name exists
-		
-
 		insert_template = \
 		"""
-		INSERT INTO booking_agent (email, password, airline_name) 
+		INSERT INTO booking_agent (email, password) 
 		VALUES (
 		{username},  
-		{password}, 
-		{airline_name})
+		{password}) 
 		"""
 		insert_query = insert_template.format(
 			username=V_ARG("string", username),
 			password=V_ARG("string", password),
-			airline_name=V_ARG("string", airline_name)
 		)
 
 	elif logintype == LOGINTYPE.AIRLINE_STAFF:
 		# get parameters from request
-		first_name = request.form.get('first_name', default=None)
-		last_name = request.form.get('last_name', default=None)
-		date_of_birth = request.form.get('date_of_birth', default=None)
-		permission = request.form.get('permission', default=None)
-		airline_name = request.form.get('airline_name', default=None)
-		
+		first_name = data.get('first_name', None)
+		last_name = data.get('last_name', None)
+		date_of_birth = data.get('date_of_birth', None)
+		airline_name = data.get('airline_name', None)
+
+
+		# check if airline_name exists
+		airline_name_exist = is_value_in_table(
+			db = db,
+			table = "airline",
+			column = "name",
+			value = airline_name,
+			datatype= "string"
+		)
+		if not airline_name_exist:
+			return jsonify({
+				"status": 'error',
+				"message": 'Airline name does not exist'
+			}), 400
+
 		insert_template = \
 		"""
 		INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name) 
@@ -137,7 +155,6 @@ def register_handler():
 		{first_name},
 		{last_name},
 		{date_of_birth},
-		{permission},
 		{airline_name})
 		"""
 		insert_query = insert_template.format(
@@ -146,18 +163,56 @@ def register_handler():
 			first_name=V_ARG("string", first_name),
 			last_name=V_ARG("string", last_name),
 			date_of_birth=V_ARG("datetime", date_of_birth),
-			permission=V_ARG("string", permission),
 			airline_name=V_ARG("string", airline_name)
 		)
 
 	db = current_app.config["db"]
 	result = db.execute_query(insert_query)
-	breakpoint()
 	if (result is None):
 		return jsonify({
 			"status": 'error',
 			"message": "Internal error"
 		}), 500
+
+
+	if logintype == LOGINTYPE.BOOKING_AGENT:
+		# get parameters from request
+		airline_name = data.get('airline_name', None)
+
+		# check if airline_name exists
+		airline_name_exist = is_value_in_table(
+			db = db,
+			table = "airline",
+			column = "name",
+			value = airline_name,
+			datatype= "string"
+		)
+		if not airline_name_exist:
+			return jsonify({
+				"status": 'error',
+				"message": 'Airline name does not exist'
+			}), 400
+
+		# insert into booking_agent_workfor
+		insert_workfor_template = \
+		"""
+		INSERT INTO booking_agent_workfor (booking_agent_email, airline_name)
+		VALUES (
+		{username},
+		{airline_name})
+		"""
+		insert_workfor_query = insert_workfor_template.format(
+			username=V_ARG("string", username),
+			airline_name=V_ARG("string", airline_name)
+		)
+		result = db.execute_query(insert_workfor_query)
+		if (result is None):
+			return jsonify({
+				"status": 'error',
+				"message": "Internal error"
+			}), 500		
+	
+	db.commit()
 	return jsonify({
 		"status": 'success',
 		"message": "Successfully registered"
