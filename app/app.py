@@ -16,7 +16,7 @@ app.config['db'] = db
 app.register_blueprint(api_bp, url_prefix='/api')
 
 # allow CORS from frontend server
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
 
 # set session secret key
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'

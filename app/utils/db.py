@@ -39,7 +39,8 @@ class DB:
                 host=self.config['host'],
                 user=self.config['user'],
                 password=self.config['password'],
-                database=self.config['database']
+                database=self.config['database'],
+                autocommit=True, 
             )
         except pymysql.Error as e:
             print(f"Error connecting to MySQL: {e}")

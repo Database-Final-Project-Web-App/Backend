@@ -30,6 +30,12 @@ def register_handler():
 			"message": "Logintype is required"
 		}), 400
 
+	if not LOGINTYPE.is_valid(logintype):
+		return jsonify({
+			"status": 'error',
+			"message": "You must choose a correct logintype. Instead, you chose {}".format(logintype)
+		}), 400
+
 	if username is None or password is None:
 		return jsonify({
 			"status": 'error',
@@ -48,7 +54,7 @@ def register_handler():
 	
 	# register
 	# define insert template and build query
-	if logintype == 'customer':
+	if logintype == LOGINTYPE.CUSTOMER:
 		# get parameters from request
 		name = data.get('name', None)
 		building_number = data.get('building_number', None)
@@ -63,7 +69,8 @@ def register_handler():
 
 		insert_template = \
 		"""
-		INSERT INTO customer VALUES (
+		INSERT INTO customer (email, name, password, building_number, street, city, state, phone_number, passport_number, passport_expiration, passport_country, date_of_birth)
+		VALUES (
 		{username}, 
 		{name}, 
 		{password}, 
@@ -92,27 +99,28 @@ def register_handler():
 			date_of_birth=V_ARG("datetime", date_of_birth)
 		)
 
-	elif logintype == 'booking agent':
+	elif logintype == LOGINTYPE.BOOKING_AGENT:
 		# get parameters from request
-		booking_agent_id = data.get('booking_agent_id', None)
 		airline_name = data.get('airline_name', None)
+
+		# check if airline_name exists
+		
 
 		insert_template = \
 		"""
-		INSERT INTO booking_agent VALUES (
+		INSERT INTO booking_agent (email, password, airline_name) 
+		VALUES (
 		{username},  
 		{password}, 
-		{booking_agent_id},
 		{airline_name})
 		"""
 		insert_query = insert_template.format(
 			username=V_ARG("string", username),
 			password=V_ARG("string", password),
-			booking_agent_id=V_ARG("string", booking_agent_id),
 			airline_name=V_ARG("string", airline_name)
 		)
 
-	elif logintype == 'staff':
+	elif logintype == LOGINTYPE.AIRLINE_STAFF:
 		# get parameters from request
 		first_name = request.form.get('first_name', default=None)
 		last_name = request.form.get('last_name', default=None)
@@ -122,7 +130,8 @@ def register_handler():
 		
 		insert_template = \
 		"""
-		INSERT INTO airline_staff VALUES (
+		INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name) 
+		VALUES (
 		{username},  
 		{password}, 
 		{first_name},
@@ -142,8 +151,13 @@ def register_handler():
 		)
 
 	db = current_app.config["db"]
-	db.execute_query(insert_query)
-
+	result = db.execute_query(insert_query)
+	breakpoint()
+	if (result is None):
+		return jsonify({
+			"status": 'error',
+			"message": "Internal error"
+		}), 500
 	return jsonify({
 		"status": 'success',
 		"message": "Successfully registered"
@@ -231,15 +245,15 @@ def login_handler():
 	if len(query_result) == 0:
 		return jsonify({
 			"status": 'error',
-			"message": "Username does not exist or password is incorrect"
+			"message": "Failed to login as {}: Username does not exist or password is incorrect".format(logintype)
 		}), 400
 
 	username_display = ""
-	if logintype == 'customer':
+	if logintype == LOGINTYPE.CUSTOMER:
 		username_display = query_result[0]['name']
-	elif logintype == 'booking agent':
+	elif logintype == LOGINTYPE.BOOKING_AGENT:
 		username_display = query_result[0]['email']
-	elif logintype == 'staff':
+	elif logintype == LOGINTYPE.AIRLINE_STAFF:
 		username_display = query_result[0]['first_name'] + " " + query_result[0]['last_name']
 	else:
 		raise Exception("You must choose a correct logintype.")
@@ -271,13 +285,12 @@ def logout_handler():
 		"message": "Successfully logged out"
 	}), 200
 
-@auth_bp.route('/current_user', methods=["GET"])
+@auth_bp.route('/is_loggedin', methods=["GET"])
 def current_user_handler():
 	if 'user' in session:
 		return jsonify({
 			"status": 'success',
 			"message": "User is logged in",
-			"user": session['user']
 		}), 200
 	else:
 		return jsonify({
