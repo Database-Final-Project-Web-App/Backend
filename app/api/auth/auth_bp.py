@@ -340,8 +340,8 @@ def logout_handler():
 		"message": "Successfully logged out"
 	}), 200
 
-@auth_bp.route('/is_loggedin', methods=["GET"])
-def current_user_handler():
+@auth_bp.route('/is_login', methods=["GET"])
+def is_login_handler():
 	if 'user' in session:
 		return jsonify({
 			"status": 'success',
