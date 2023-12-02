@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG, find_airline, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
@@ -46,7 +46,7 @@ def my_handler():
 	# get parameters from json request
 	data = request.get_json()
 	flight_num = data.get("flight_num", None)
-	airline_name = find_airline(db, username)
+	airline_name = find_airline_for_staff(db, username)
 	departure_time = data.get("departure_time", None)
 	arrival_time = data.get("arrival_time", None)
 	price = data.get("price", None)
@@ -123,7 +123,7 @@ def create_handler():
 	
 	# get parameters from json request
 	data = request.get_json()
-	airline_name = find_airline(db, username)
+	airline_name = find_airline_for_staff(db, username)
 	departure_time = data.get("departure_time", None)
 	arrival_time = data.get("arrival_time", None)
 	price = data.get("price", None)
@@ -165,7 +165,6 @@ def create_handler():
 
 @flight_bp.route('/change-status', methods=["POST"])
 def change_status_handler():
-	#TODO:
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
 	username = session['user']['username']
@@ -180,7 +179,7 @@ def change_status_handler():
 		
 	# get parameters from json request
 	data = request.get_json()
-	airline_name = find_airline(db, username)
+	airline_name = find_airline_for_staff(db, username)
 	flight_num = data.get("flight_num", None)
 	status = data.get("status", None)
 
