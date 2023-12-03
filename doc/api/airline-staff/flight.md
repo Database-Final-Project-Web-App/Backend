@@ -4,6 +4,8 @@
 
 >http://localhost:5000/api/airline-staff/flight/my
 
+View all upcoming flight
+
 **Request**: `POST`
 
 Root Object:
