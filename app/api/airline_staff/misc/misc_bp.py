@@ -50,7 +50,7 @@ def frequent_customer_handler():
 		return jsonify({"error": "Internal server error."}), 500
 	
 	if len(top_tickets_year) == 0:
-		return jsonify({"error": "No customer found."}), 400
+		return jsonify({"top_frequent_customers": "No customer found", "flights": []}), 200
 	
 	# See the list of flights that the customer has taken in the past year
 	search_flights_query_template = \
