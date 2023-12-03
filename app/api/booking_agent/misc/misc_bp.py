@@ -47,15 +47,15 @@ def commision_handler():
 	)
 	# breakpoint()
 	db = current_app.config["db"]
-	commision_result = db.execute_query(commision_query)
+	commision_result = db.execute_query(commision_query, cursor_type="dict")
 	if commision_result is None:
 		return jsonify({"error": "Internal error"}), 500
 	commision = commision_result[0]
-	return jsonify({
-		"commision": commision[0],
-		"num_tickets": commision[1],
-		"avg_commision": commision[2]
-	}), 200
+	if (commision["num_tickets"] == 0):
+		commision["avg_commision"] = 0
+		commision["commision"] = 0
+	
+	return jsonify(commision), 200
 
 @misc_bp.route('/top-customer', methods=['GET'])
 def top_customers_handler():

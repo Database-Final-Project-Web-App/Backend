@@ -194,3 +194,15 @@ SELECT
 FROM flight f
 ORDER BY RAND(233)
 LIMIT 100;
+
+-- generate tickets bought by booking agents
+INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
+SELECT 
+    f.flight_num,
+    f.airline_name,
+    (SELECT email FROM customer ORDER BY RAND(233) LIMIT 1),
+    (SELECT ba.email FROM booking_agent ba JOIN booking_agent_workfor baw ON ba.email = baw.booking_agent_email WHERE baw.airline_name = f.airline_name ORDER BY RAND(233) LIMIT 1),
+    DATE_SUB(f.departure_time, INTERVAL FLOOR(RAND(233) * 30) DAY)
+FROM flight f
+ORDER BY RAND(233)
+LIMIT 100;
