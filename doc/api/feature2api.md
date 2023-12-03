@@ -62,7 +62,7 @@ After logging in successfully a booking agent may do any of the following use ca
 
 1. View My flights: Provide various ways for the booking agents to see flights information for which he/she purchased on behalf of customers. The default should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of dates, specify destination and/or source airport name and/or city name etc to show all the flights for which he/she purchased tickets.
 
-   > `GET /booking-agent/flight/my`
+   > `POST /booking-agent/flight/my`
 
 2. Purchase tickets: Booking agent chooses a flight and purchases tickets for other customers giving customer information. You may find it easier to implement this along with a use case to search for flights. Notice that as described in the previous assignments, the booking agent may only purchase tickets from airlines they work for.
 

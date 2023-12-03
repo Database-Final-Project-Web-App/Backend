@@ -23,21 +23,26 @@ def purchase_handler():
 	
 	# get flight_num from url parameter
 	flight_num = request.args.get("flight_num", None)
+	airline_name = request.args.get("airline_name", None)
+	if flight_num is None or airline_name is None:
+		return jsonify({"error": "Flight number and airline name are required."}), 400
+	flight_num = int(flight_num)
 
-	# get flight info
+	# check whether flight exists
 	search_query_template = \
 	"""
 	SELECT airline_name
 	FROM flight
-	WHERE flight_num = {flight_num}
+	WHERE {flight_num}
 	"""
 
 	search_query = search_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_num)
+		flight_num=KV_ARG("flight_num", "number", flight_num, mode="restricted")
 	)
 
 	db = current_app.config["db"]
-	airline_name = db.execute_query(search_query)["airline_name"]
+	if not db.execute_query(search_query):
+		return jsonify({"error": "Flight does not exist."}), 400
 
 	# check whether there is a ticket left
 	ticket_left_result = ticket_left(db, flight_num, airline_name)
@@ -72,5 +77,6 @@ def purchase_handler():
 		db.execute_query(insert_query)
 	except Exception:
 		return jsonify({"error": "Already purchased the ticket."}), 400
+	db.commit()
 
 	return jsonify({"status": "Successfully purchased the ticket."}), 200

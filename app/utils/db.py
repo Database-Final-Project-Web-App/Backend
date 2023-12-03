@@ -413,18 +413,18 @@ def ticket_left(db, flight_num, airline_name):
 	FROM flight NATURAL JOIN airplane)
 	SELECT seat_num - COUNT(ticket_id) AS ticket_left, airline_name, flight_num, airplane_id, seat_num
 	FROM flight_seat NATURAL JOIN ticket
-	WHERE flight_num = {flight_num}
-	AND airline_name = {airline_name}
+	WHERE {flight_num}
+    AND {airline_name}
 	GROUP BY airline_name, flight_num, airplane_id
 	"""
-	
+
     ticket_left_query = ticket_left_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_num),
-		airline_name=KV_ARG("airline_name", "string", airline_name)
+		flight_num=KV_ARG("flight_num", "number", flight_num, mode="restricted"),
+        airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted"),
 	)
 
     ticket_left = db.execute_query(ticket_left_query)
-    if ticket_left[0]["ticket_left"] <= 0:
+    if ticket_left is None:
         return False
     return True
 

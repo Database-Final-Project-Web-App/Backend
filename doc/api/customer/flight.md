@@ -34,4 +34,8 @@ Root Object:
 | arr_airport_name | string | The arrival airport name | |
 | dep_airport_name | string | The departure airport name | |
 
+**Example**
 
+Request
+
+$ curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d "{}" http://localhost:5000/api/customer/flight/my
