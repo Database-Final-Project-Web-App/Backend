@@ -28,7 +28,8 @@ def my_handler():
 	AND a2.name = flight.arr_airport_name)
 	SELECT * 
 	FROM flight_city NATURAL JOIN ticket
-	WHERE {flight_num}
+	WHERE {customer_email}
+	AND {flight_num}
 	AND {airline_name}
 	AND {arrival_time}
 	AND {departure_time}
@@ -45,6 +46,7 @@ def my_handler():
 
 	# get parameters from json request
 	data = request.get_json()
+	customer_email = data.get("customer_email", None)
 	flight_num = data.get("flight_num", None)
 	airline_name = find_airline_for_staff(db, username)
 	departure_time = data.get("departure_time", None)
@@ -62,6 +64,7 @@ def my_handler():
 
 	# build query
 	search_query = search_query_template.format(
+		customer_email=KV_ARG("customer_email", "string", customer_email),
 		flight_num=KV_ARG("flight_num", "number", flight_num),
 		airline_name=KV_ARG("airline_name", "string", airline_name),
 		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
