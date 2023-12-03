@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, timedelta
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG, user_exists
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 from app.utils.misc import COMMISSION_RATE
 
@@ -344,6 +344,15 @@ def grant_permission_handler():
 	airline_name = find_airline_for_staff(db, username)
 	grant_username = data.get("airline_staff_username", None)
 	grant_permission = data.get("permission", None)
+
+	if grant_username is None or grant_permission is None:
+		return jsonify({"error": "Missing airline staff username or permission."}), 400
+	
+	# check if the user exists
+	if not user_exists(db, grant_username, LOGINTYPE.AIRLINE_STAFF)[0]:
+		return jsonify({"error": "The staff does not exist."}), 400
+	
+	# check if the permission is valid
 	if grant_permission not in [PERMISSION.ADMIN, PERMISSION.OPERATOR, PERMISSION.NORMAL]:
 		return jsonify({"error": "Invalid permission."}), 400
 	

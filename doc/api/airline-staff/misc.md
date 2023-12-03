@@ -107,7 +107,18 @@ Root Object:
 | ---- | ---- | ----------- | ---- |
 | year-month | array | monthly ticket sales information | |
 
-`monthly data[i]` object
+`monthly data[i]` object:
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| Total amount | float | Month wise amount | |
+| number of tickets | float | month wise number of tickets sold | |
+
+`Monthly_report_tickets[i]` object:
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| Number of tickets sold | float | Total number of tickets sold | |
+| Total amount | float | Total amount | |
+
 
 
 **Example**
@@ -149,12 +160,25 @@ Response
 
 **Request**: `GET`
 
+Return total amount of both direct and indirect earning ways in the last month and last year
+
+**Json Response**
+
+Root Object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| booking_revenue_last_month | float | Total amount of revenue earned from indirect sales in the last month (customer buy tickets through booking agents) | |
+| booking_revenue_last_year | float | Total amount of revenue earned from indirect sales (customer buy tickets through booking agents) in the last month | |
+| direct_revenue_last_month | float | Total amount of revenue earned from direct sales in the last month (customer buy tickets without booking agents) | |
+| direct_revenue_last_year | float | Total amount of revenue earned from direct sales in the last year (customer buy tickets without booking agents) | |
+
 **Example**
 
 Request
 
 ```bash
-curl -X GET -H "Content-Type: application/json" -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/revenue-comparison"
+curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/revenue-comparison"
 ```
 
 Response
@@ -172,14 +196,35 @@ Response
 
 ## `/airline-staff/misc/top-destination`
 
-Method: `GET`
+**Request**: `GET`
+
+>http://localhost:5000/api/airline-staff/misc/top-destination
+
+Find the top destination in the airline the staff works for in last 3 month and last year.
+
+Request Parameters Query Parameters
+
+Input Type: Static Values
+
+| Name | Type | Description | required? | note |
+| ---- | ---- | ----------- | --------- | ---- |
+| limit | int | The top number to display | No | Defalted to be 3 |
+
+**Json Response**
+
+Root object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| top_month_destination | array | Top destination last 3 month | |
+| top_year_destination | array | Top destination last year | |
 
 **Example**
 
 Request
 
 ```bash
-curl -X GET -H "Content-Type: application/json" -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/top-destination?limit=5"
+curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/top-destination?limit=5"
 ```
 
 Response
@@ -195,7 +240,21 @@ Response
 
 ## `/airline-staff/misc/grant-permission`
 
+>http://localhost:5000/api/airline-staff/misc/grant-permission
+
 **Request**: `POST`
+
+Airline staff who has the "Admin" permission, can grant new permission for other staff works for the same airline.
+
+**Request Parameters**
+
+**Input Type**: `application/json`
+
+Root object:
+
+| Name | Type | Description | required? | note |
+| ---- | ---- | ----------- | --------- | ---- | 
+
 
 **Example**
 
