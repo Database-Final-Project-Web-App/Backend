@@ -26,7 +26,7 @@ def my_handler():
 	FROM airport AS a1, airport AS a2, flight
 	WHERE a1.name = flight.dept_airport_name 
 	AND a2.name = flight.arr_airport_name)
-	SELECT * 
+	SELECT customer_email, flight_num, airline_name
 	FROM flight_city NATURAL JOIN ticket
 	WHERE {customer_email}
 	AND {flight_num}
@@ -41,7 +41,6 @@ def my_handler():
 	AND {arr_city}
 	AND {dept_city}
 	AND {ticket_id}
-	AND {purchase_date}
 	"""
 
 	# get parameters from json request
@@ -59,8 +58,8 @@ def my_handler():
 	arr_city = data.get("arr_city", None)
 	dept_city = data.get("dept_city", None)
 	ticket_id = data.get("ticket_id", None)
-	start_date = data.get("start_date", None)
-	end_date = data.get("end_date", None)
+	# start_date = data.get("start_date", None)
+	# end_date = data.get("end_date", None)
 
 	# build query
 	search_query = search_query_template.format(
@@ -76,8 +75,8 @@ def my_handler():
 		dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name),
 		arr_city=KV_ARG("arr_city", "string", arr_city),
 		dept_city=KV_ARG("dept_city", "string", dept_city),
-		ticket_id=KV_ARG("ticket_id", "number", ticket_id),
-		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
+		ticket_id=KV_ARG("ticket_id", "number", ticket_id)
+		# purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
 
 
@@ -85,27 +84,15 @@ def my_handler():
 	search_result = db.execute_query(search_query)
 
 	if search_result is None:
-		return jsonify({"error": "Query failed"}), 500
+		return jsonify({"error": "Internal error."}), 500
 
 	# return result
 	result = []
 	for row in search_result:
 		result.append({
-			"flight_num": row[0],
-			"airline_name": row[1],
-			"departure_time": row[2],
-			"arrival_time": row[3],
-			"price": row[4],
-			"status": row[5],
-			"airplane_id": row[6],
-			"arr_airport_name": row[7],
-			"dept_airport_name": row[8],
-			"dept_city": row[9],
-			"arr_city": row[10],
-			"ticket_id": row[11],
-			"customer_email": row[12],
-			"booking_agent_email": row[13],
-			"purchase_date": row[14],
+			"flight_num": row[1],
+			"airline_name": row[2],
+			"customer_email": row[0]
 		})
 	return jsonify({"flights": result}), 200
 

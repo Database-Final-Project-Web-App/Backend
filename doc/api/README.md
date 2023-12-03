@@ -91,7 +91,7 @@ These api's are for features with one of the following properties
 
      - [`/flight`](/doc/api/booking-agent/flight.md)
 
-       - `GET /my`: Retrieve flights for the authenticated user 
+       - `POST /my`: Retrieve flights for the authenticated user 
 
      - [`/ticket`](/doc/api/booking-agent/ticket.md)
 
