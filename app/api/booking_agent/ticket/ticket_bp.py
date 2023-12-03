@@ -21,50 +21,69 @@ def purchase_handler():
 	if logintype != LOGINTYPE.BOOKING_AGENT:
 		return jsonify({"error": "You must login as booking agent."}), 400
 
-	# get flight_num from url parameter
-	flight_num = request.args.get("flight_num", None)
-	customer_email = request.args.get("customer_email", None)
+	# get parameters
+	data = request.get_json()
+	flight_num = data.get("flight_num", None)
+	airline_name = data.get("airline_name", None)
+	customer_email = data.get("customer_email", None)
+	db = current_app.config["db"]
 
-	# get flight info
+	if customer_email is None:
+		return jsonify({"error": "You must have a customer."}), 400
+	
+	# check whether the customer exists
+	#breakpoint()
+	if not user_exists(db, customer_email, "customer")[0]:
+		return jsonify({"error": "Customer does not exist."}), 400
+	
+
+	if flight_num is None or airline_name is None:
+		return jsonify({"error": "Flight number and airline name are required."}), 400
+	flight_num = int(flight_num)
+
+	# check whether flight exists
 	search_query_template = \
 	"""
-	SELECT airline_name
+	SELECT *
 	FROM flight
-	WHERE flight_num = {flight_num}
+	WHERE {flight_num}
+	AND {airline_name}
 	"""
 
 	search_query = search_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_num)
+		flight_num=KV_ARG("flight_num", "number", flight_num, mode="restricted"),
+		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted")
 	)
 
-	db = current_app.config["db"]
-	airline_name = db.execute_query(search_query)["airline_name"]
+	search_result=db.execute_query(search_query)
+	if not search_result:
+		return jsonify({"error": "Flight does not exist."}), 400
 
-	# search whether the booking agent works for the airline
+	# check whether the booking agent works for the airline
 	airline_query_template = \
 	"""
 	SELECT airline_name
-	FROM booking_agent_works_for
+	FROM booking_agent_workfor
 	WHERE {username}
 	"""
 
 	airline_query = airline_query_template.format(
 		username=KV_ARG("booking_agent_email", "string", username),
 	)
-
-	airline_result = db.execute_query(airline_query)
-	airline_result = [airline["airline_name"] for airline in airline_result]
+	try:
+		airline_result = db.execute_query(airline_query)
+	except Exception:
+		return jsonify({"error": "Internal error."}), 500
+	airline_result = [airline[0] for airline in airline_result]
+	# show the airline name that the booking agent works for
 	if airline_name not in airline_result:
-		return jsonify({"error": "Booking agent does not work for the airline."}), 400
+		return jsonify({"error": "Booking agent does not work for the airline. It only works for{}".format(airline_result)}), 400
 	
 	# check whether there is a ticket left
 	ticket_left_result = ticket_left(db, flight_num, airline_name)
 	if not ticket_left_result:
 		return jsonify({"error": "No ticket left."}), 400
 	
-	# check whether the customer exists
-	if not user_exists(db, customer_email, "customer")[0]:
-		return jsonify({"error": "Customer does not exist."}), 400
 	
 	# get purchase date
 	purchase_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -73,26 +92,26 @@ def purchase_handler():
 	# insert into ticket table
 	insert_query_template = \
 	"""
-	INSERT INTO ticket (flight_id, airline_name, customer_email, booking_agent_id, purchase_date)
+	INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
 	VALUES (
 		{flight_num},
 		{airline_name},
 		{customer_email},
 		{booking_agent_id},
-		{purchase_date},
+		{purchase_date}
 	)
 	"""
 	insert_query = insert_query_template.format(
-		flight_num=V_ARG("string", flight_num),
+		flight_num=V_ARG("number", flight_num),
 		airline_name=V_ARG("string", airline_name),
 		customer_email=V_ARG("string", customer_email),
 		booking_agent_id=V_ARG("string", username),
 		purchase_date=V_ARG("datetime", purchase_datetime)
 	)
 
-	try:
-		db.execute_query(insert_query)
-	except Exception:
-		return jsonify({"error": "Already purchased the ticket."}), 400
+	result = db.execute_query(insert_query)
+	if result is None:
+		return jsonify({"error": "Internal error."}), 500
+	db.commit()
 
 	return jsonify({"status": "Successfully purchased the ticket."}), 200
