@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG, is_value_in_table
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
@@ -77,6 +77,7 @@ def my_handler():
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
 
+
 	# execute query
 	search_result = db.execute_query(search_query)
 
@@ -132,10 +133,66 @@ def create_handler():
 	arr_airport_name = data.get("arr_airport_name", None)
 	dept_airport_name = data.get("dept_airport_name", None)
 
+	# check if all values are provided
+	if None in [airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name]:
+		return jsonify({"error": "Missing values"}), 400
+
+	if status not in ["Upcoming", "Inprogress", "Delayed"]:
+		return jsonify({"error": "status must be one of 'upcoming', 'inprogress', 'delayed'"}), 400
+	
+	# check if the flight already exists
+	check_flight_query_template = \
+	"""
+	SELECT * FROM flight
+	WHERE {airline_name}
+	AND {departure_time}
+	AND {arrival_time}
+	AND {airplane_id}
+	"""
+
+	check_flight_query = check_flight_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		departure_time=KV_ARG("departure_time", "datetime", departure_time),
+		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
+		airplane_id=KV_ARG("airplane_id", "number", airplane_id)
+	)
+
+	check_flight_result = db.execute_query(check_flight_query)
+	if check_flight_result is None:
+		return jsonify({"error": "Interior Error."}), 500
+	if len(check_flight_result) > 0:
+		return jsonify({"error": "Flight already exists"}), 400
+	
+	# check if the airplane exists
+	check_airplane_query_template = \
+	"""
+	SELECT * FROM airplane
+	WHERE {airline_name}
+	AND {airplane_id}
+	"""
+
+	check_airplane_query = check_airplane_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		airplane_id=KV_ARG("airplane_id", "number", airplane_id)
+	)
+
+	check_airplane_result = db.execute_query(check_airplane_query)
+	if check_airplane_result is None:
+		return jsonify({"error": "Interior Error."}), 500
+	if len(check_airplane_result) == 0:
+		return jsonify({"error": "Airplane does not exist"}), 400
+	
+	# check if the airport exists
+	if not is_value_in_table(db, "airport", "name", arr_airport_name, "string"):
+		return jsonify({"error": "Invalid arrival airport name"}), 400
+	if not is_value_in_table(db, "airport", "name", dept_airport_name, "string"):
+		return jsonify({"error": "Invalid departure airport name"}), 400
+
+
 	# build query
 	create_query_template = \
 	"""
-	INSERT INTO flight
+	INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name)
 	VALUES ({airline_name},
 		{departure_time},
 		{arrival_time},
@@ -143,24 +200,27 @@ def create_handler():
 		{status},
 		{airplane_id},
 		{arr_airport_name},
-		{dept_airport_name})
+		{dept_airport_name}
+	)
 	"""
 
 	create_query = create_query_template.format(
-		airline_name=KV_ARG("airline_name", "string", airline_name),
-		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
-		departure_time=KV_ARG("departure_time", "datetime", departure_time),
-		price=KV_ARG("price", "number", price),
-		status=KV_ARG("status", "string", status),
-		airplane_id=KV_ARG("airplane_id", "number", airplane_id),
-		arr_airport_name=KV_ARG("arr_airport_name", "string", arr_airport_name),
-		dept_airport_name=KV_ARG("dept_airport_name", "string", dept_airport_name)
+		airline_name=V_ARG("string", airline_name),
+		departure_time=V_ARG("datetime", departure_time),
+		arrival_time=V_ARG("datetime", arrival_time),
+		price=V_ARG("number", price),
+		status=V_ARG("string", status),
+		airplane_id=V_ARG("number", airplane_id),
+		arr_airport_name=V_ARG("string", arr_airport_name),
+		dept_airport_name=V_ARG("string", dept_airport_name)
 	)
 
+	# breakpoint()
 	# execute query
 	create_result = db.execute_query(create_query)
 	if create_result is None:
-		return jsonify({"error": "Query failed"}), 500
+		return jsonify({"error": "Interior error"}), 500
+	db.commit()
 	return jsonify({"status": "success"}), 200
 
 @flight_bp.route('/change-status', methods=["POST"])
@@ -173,6 +233,7 @@ def change_status_handler():
 	if logintype != LOGINTYPE.AIRLINE_STAFF:
 		return jsonify({"error": "You must login as airline staff."}), 400
 	else:
+		# breakpoint()
 		permission = find_permission(db, username)
 		if PERMISSION.OPERATOR not in permission:
 			return jsonify({"error": "you don't have the permission to change flight status"}), 400
@@ -183,13 +244,36 @@ def change_status_handler():
 	flight_num = data.get("flight_num", None)
 	status = data.get("status", None)
 
+	# check if the flight exists
+	check_flight_query_template = \
+	"""
+	SELECT * FROM flight
+	WHERE {airline_name}
+	AND {flight_num}
+	"""
+
+	check_flight_query = check_flight_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		flight_num=KV_ARG("flight_num", "number", flight_num)
+	)
+
+	check_flight_result = db.execute_query(check_flight_query)
+	if check_flight_result is None:
+		return jsonify({"error": "Interior Error."}), 500
+	if len(check_flight_result) == 0:
+		return jsonify({"error": "Flight does not exist"}), 400
+	
+	# check if the status is valid
+	if status not in ["Upcoming", "Inprogress", "Delayed"]:
+		return jsonify({"error": "status must be one of 'upcoming', 'inprogress', 'delayed'"}), 400
+
 	# build query
 	change_status_query_template = \
 	"""
 	UPDATE flight
-	SET status = {status}
-	WHERE airline_name = {airline_name}
-	AND flight_num = {flight_num}
+	SET {status}
+	WHERE {flight_num}
+	AND {airline_name}
 	"""
 
 	change_status_query = change_status_query_template.format(
@@ -202,5 +286,7 @@ def change_status_handler():
 	change_status_result = db.execute_query(change_status_query)
 	if change_status_result is None:
 		return jsonify({"error": "Query failed"}), 500
+	db.commit()
+	# print(db.execute_query(check_flight_query))
 	return jsonify({"status": "success"}), 200
 

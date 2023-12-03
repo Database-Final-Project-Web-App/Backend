@@ -91,7 +91,7 @@ After logging in successfully an airline staff may do any of the following use c
 
 1. View My flights: Defaults will be showing all the upcoming flights operated by the airline he/she works for the next 30 days. He/she will be able to see all the current/future/past flights operated by the airline he/she works for based range of dates, source/destination airports/city etc. He/she will be able to see all the customers of a particular flight.
 
-   > `GET /airline-staff/flight/my`
+   > `POST /airline-staff/flight/my`
 
 2. Create new flights: He or she creates a new flight, providing all the needed data, via forms. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. Defaults will be showing all the upcoming flights operated by the airline he/she works for the next 30 days.
 
@@ -99,7 +99,7 @@ After logging in successfully an airline staff may do any of the following use c
 
 3. Change Status of flights: He or she changes a flight status (from upcoming to in progress, in progress to delayed etc) via forms. The application should prevent unauthorized users or staffs without "Operator" permission from doing this action.
 
-   > `PUT /airline-staff/flight/:flight_id/status`
+   > `POST /airline-staff/flight/change-status`
 
 4. Add airplane in the system: He or she adds a new airplane, providing all the needed data, via forms. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. In the confirmation page, she/he will be able to see all the airplanes owned by the airline he/she works for.
 

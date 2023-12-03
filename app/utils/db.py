@@ -360,8 +360,8 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
         if mode == "restricted":
             return "{arg_name} = \"{arg_val}\"".format(
                 arg_name=arg_name, 
-                arg_val=floor_datetime(arg_val)
-                )
+                arg_val=arg_val
+            )
 
         try:
             arg_val = tuple(arg_val)
@@ -393,16 +393,17 @@ def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
         raise Exception("You must choose a correct logintype. Your input logintype is {}".format(logintype))
     
 
-    user_exists_query = user_exists_query_template.format(
-        logintype=logintype,
-    )
-
     if logintype == LOGINTYPE.CUSTOMER:
         user_exists_query_template += " WHERE email = {username}"
     elif logintype == LOGINTYPE.BOOKING_AGENT:
         user_exists_query_template += " WHERE email = {username}"
     elif logintype == LOGINTYPE.AIRLINE_STAFF:
         user_exists_query_template += " WHERE username = {username}"
+
+    user_exists_query = user_exists_query_template.format(
+        logintype=logintype,
+        username=V_ARG("string", username)
+    )
 
     result = db.execute_query(user_exists_query, **db_kwargs)
     if result:
@@ -452,7 +453,7 @@ def find_airline_for_staff(db, username):
         }), 500
     elif len(airline_name) == 0:
         return []
-    return airline_name[0]
+    return airline_name[0][0]
 
 # find the permission of a staff
 def find_permission(db, username):
@@ -460,13 +461,25 @@ def find_permission(db, username):
     """
     SELECT permission
     FROM airline_staff_permission
-    WHERE username = {username}
+    WHERE {username}
     """
     find_permission_query = find_permission_query_template.format(
         username=KV_ARG("username", "string", username)
     )
-    permission = db.execute_query(find_permission_query)
-    return permission[0]["permission"]
+    permission_result = db.execute_query(find_permission_query)
+    if permission_result is None: 
+        return jsonify({
+            "status": 'error',
+            "message": "Internal error"
+        }), 500
+    
+    permission = []
+    if len(permission_result) == 0:
+        permission.append(PERMISSION.NORMAL)
+    else:
+        for i in permission_result:
+            permission.append(i[0])
+    return permission
 
 # is value in table
 def is_value_in_table(db, table, column, value, datatype):
