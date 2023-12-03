@@ -37,12 +37,16 @@ def whoami_handler():
 		LOGINTYPE.BOOKING_AGENT: ["email", "booking_agent_id", "airline_name"],
 		LOGINTYPE.AIRLINE_STAFF: ["username", "first_name", "last_name", "date_of_birth", "airline_name"]
 	}[session['user']['logintype']]
+	table_name = {
+		LOGINTYPE.CUSTOMER: "customer",
+		LOGINTYPE.BOOKING_AGENT: "booking_agent NATURAL JOIN booking_agent_workfor",
+		LOGINTYPE.AIRLINE_STAFF: "airline_staff"
+	}[session['user']['logintype']]
 	query = query_template.format(
 		columnname=", ".join(column_name),
-		tablename=session['user']['logintype'],
+		tablename=table_name,
 		username=KV_ARG(id_attr_name, "string", username)
 	)
-	# breakpoint()
 	query_result = db.execute_query(query, cursor_type='dict')
 	if not query_result:
 		return jsonify({

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 
-from app.utils.db import KV_ARG 
+from app.utils.db import KV_ARG, date2datetime_range
 
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
@@ -34,15 +34,18 @@ def search_handler():
 	data = request.get_json()
 	flight_num = data.get("flight_num", None)
 	airline_name = data.get("airline_name", None)
-	arrival_time = data.get("arrival_time", None)
-	departure_time = data.get("departure_time", None)
+	departure_date = data.get("departure_date", None)
+	arrival_date = data.get("arrival_date", None)
 	price = data.get("price", None)
-	status = data.get("status", "upcoming")
+	status = data.get("status", None)
 	airplane_id= data.get("airplane_id", None)
-	arr_airport_name = data.get("arr_airport_name", None)
 	dept_airport_name = data.get("dept_airport_name", None)
-	arr_city = data.get("arr_city", None)
+	arr_airport_name = data.get("arr_airport_name", None)
 	dept_city = data.get("dept_city", None)
+	arr_city = data.get("arr_city", None)
+
+	departure_time = date2datetime_range(departure_date)
+	arrival_time = date2datetime_range(arrival_date)
 
 	# build query
 	query = query_template.format(
@@ -83,10 +86,12 @@ def search_handler():
 			"dept_city": row[9],
 			"arr_city": row[10]
 		})	
-
-	if len(result) == 0:
-		return jsonify({"error": "No results found"}), 404
-
+	# breakpoint()
+	if result is None:
+		return jsonify({
+			"error": "Internal error"
+		}), 500 
+	# breakpoint()
 	# return result as json	
 	return jsonify({"flights": result}), 200 
 	

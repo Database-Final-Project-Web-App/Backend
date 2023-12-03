@@ -191,6 +191,21 @@ def ceil_datetime(s: str) -> str:
     raise ValueError("Invalid datetime string: {s}".format(s=s))
 
 
+def date2datetime_range(s):
+    """
+    Convert a date string to a datetime range tuple
+
+    :param s: the date string to be converted
+    :return: a datetime range tuple
+
+    Example:
+    >>> date2datetime_range("2020-01-23")
+    ("2020-01-23 00:00:00", "2020-01-23 23:59:59")
+    """
+    if s is None:
+        return None 
+    return (floor_datetime(s), ceil_datetime(s))
+
 def V_ARG(arg_type: str, arg_val):
     """
     Arg for INSERT query. More restricted than WHERE_ARG

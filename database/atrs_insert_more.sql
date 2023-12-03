@@ -168,15 +168,20 @@ INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, a
 SELECT 
     a.airline_name,
     DATE_ADD(NOW(), INTERVAL FLOOR(RAND(233) * 100) DAY),
-    DATE_ADD(NOW(), INTERVAL FLOOR(RAND(233) * 100 + 5) DAY),
+    DATE_ADD(NOW(), INTERVAL FLOOR(RAND(233) * 100) DAY),
     FLOOR(100 + RAND(233) * 900),
     ELT(FLOOR(1 + RAND(233) * 3), 'Upcoming', 'InProgress', 'Delayed'),
     a.airplane_id,
     (SELECT name FROM airport ORDER BY RAND(233) LIMIT 1),
-    (SELECT name FROM airport ORDER BY RAND(233) LIMIT 1)
+    (SELECT name FROM airport ORDER BY RAND(234) LIMIT 1)
 FROM airplane a
 ORDER BY RAND(233)
 LIMIT 100;
+
+-- Add random day and hour and minute to arrival time
+UPDATE flight
+SET arrival_time = DATE_ADD(arrival_time, INTERVAL FLOOR(RAND(233) * 60 * 24 * 2) MINUTE);
+
 
 -- Generate more tickets
 INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
