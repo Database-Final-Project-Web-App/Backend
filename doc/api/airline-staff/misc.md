@@ -254,7 +254,16 @@ Root object:
 
 | Name | Type | Description | required? | note |
 | ---- | ---- | ----------- | --------- | ---- | 
+| airline_staff_username | string | the username of the airline staff who need the new permission | yes | |
+| permission | string | the granted permission | yes | it can only be in ["Admin", "Operator"]
 
+
+**Json response**:
+Root Object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| status | string | the permission granted successfully or not | |
 
 **Example**
 
