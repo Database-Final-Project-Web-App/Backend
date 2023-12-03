@@ -159,7 +159,7 @@ def create_handler():
 
 	check_flight_result = db.execute_query(check_flight_query)
 	if check_flight_result is None:
-		return jsonify({"error": "Interior Error."}), 500
+		return jsonify({"error": "Internal Error."}), 500
 	if len(check_flight_result) > 0:
 		return jsonify({"error": "Flight already exists"}), 400
 	
@@ -178,7 +178,7 @@ def create_handler():
 
 	check_airplane_result = db.execute_query(check_airplane_query)
 	if check_airplane_result is None:
-		return jsonify({"error": "Interior Error."}), 500
+		return jsonify({"error": "Internal Error."}), 500
 	if len(check_airplane_result) == 0:
 		return jsonify({"error": "Airplane does not exist"}), 400
 	
@@ -219,7 +219,7 @@ def create_handler():
 	# execute query
 	create_result = db.execute_query(create_query)
 	if create_result is None:
-		return jsonify({"error": "Interior error"}), 500
+		return jsonify({"error": "Internal error"}), 500
 	db.commit()
 	return jsonify({"status": "success"}), 200
 
@@ -259,7 +259,7 @@ def change_status_handler():
 
 	check_flight_result = db.execute_query(check_flight_query)
 	if check_flight_result is None:
-		return jsonify({"error": "Interior Error."}), 500
+		return jsonify({"error": "Internal Error."}), 500
 	if len(check_flight_result) == 0:
 		return jsonify({"error": "Flight does not exist"}), 400
 	

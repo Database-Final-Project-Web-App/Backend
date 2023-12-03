@@ -9,7 +9,7 @@ curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d 
 \"2024-01-01\"}" http://localhost:5000/api/airline-staff/flight/my
 ```
 
-Result
+response
 
 ```json
 {
@@ -62,7 +62,7 @@ Request
 curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d "{\"airline_name\": \"China Eastern\", \"airplane_id\": 4, \"departure_time\": \"2024-01-15 10:30:00\", \"arrival_time\": \"2024-01-15 19:45:00\", \"price\": 372.00, \"status\": \"Upcoming\", \"arr_airport_name\": \"NRT\", \"dept_airport_name\": \"BOS\"}" http://localhost:5000/api/airline-staff/flight/create
 ```
 
-Result
+response
 
 ```json
 {

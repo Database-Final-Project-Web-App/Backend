@@ -6,7 +6,7 @@ Request
 curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/customer/misc/spending?start_date=2023-01-01&end_date=2024-01-01"
 ```
 
-Result
+response
 
 ```json
 {

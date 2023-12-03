@@ -8,7 +8,7 @@ Request
 curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/booking-agent/misc/commision?start_date=2023-01-01&end_date=2024-10-01"
 ```
 
-Result
+response
 
 ```json
 {
@@ -28,7 +28,7 @@ Request
 curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/booking-agent/misc/top-customer?start_date=2023-01-01&end_date=2024-10-01&limit=5"
 ```
 
-Result
+response
 
 ```json
 {

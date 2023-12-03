@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app, session
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 airplane_bp = Blueprint('airplane', __name__, url_prefix='/airplane')
@@ -24,17 +24,18 @@ def add_handler():
 	#add airplane
 	create_airplane_query_template = \
 	"""
-	INSERT INTO airplane
+	INSERT INTO airplane(airline_name, seat_num)
 	VALUES ({airline_name}, {seat_num})
 	"""
 
 	create_airplane_query = create_airplane_query_template.format(
-		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted"),
-		seat_num=KV_ARG("seat_num", "number", seat_num, mode="restricted")
+		airline_name=V_ARG("string", airline_name),
+		seat_num=V_ARG("number", seat_num)
 	)
 
 	create_airplane_result = db.execute_query(create_airplane_query)
 	if create_airplane_result is None:
-		return jsonify({"error": "Query failed"}), 500
+		return jsonify({"error": "Internal error"}), 500
 	
+	db.commit()
 	return jsonify({"status": "success"}), 200
