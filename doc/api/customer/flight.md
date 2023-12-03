@@ -4,7 +4,7 @@
 
 > http://localhost:5000/api/customer/flight/my
 
-**Request**: `GET`
+**Request**: `POST`
 
 Retrieve all flights bought by the logged in customer.
 
