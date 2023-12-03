@@ -383,21 +383,26 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
 
 # Determine whether a user exists
 def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
-    user_exists_query = \
+    user_exists_query_template = \
     """
     SELECT *
     FROM {logintype}
-    WHERE {username}
     """
     # Determine whether a valid logintype: customer, booking_agent, airline_staff
     if not LOGINTYPE.is_valid(logintype):
         raise Exception("You must choose a correct logintype. Your input logintype is {}".format(logintype))
     
 
-    user_exists_query = user_exists_query.format(
+    user_exists_query = user_exists_query_template.format(
         logintype=logintype,
-        username=KV_ARG("username", "string", username),
     )
+
+    if logintype == LOGINTYPE.CUSTOMER:
+        user_exists_query_template += " WHERE email = {username}"
+    elif logintype == LOGINTYPE.BOOKING_AGENT:
+        user_exists_query_template += " WHERE email = {username}"
+    elif logintype == LOGINTYPE.AIRLINE_STAFF:
+        user_exists_query_template += " WHERE username = {username}"
 
     result = db.execute_query(user_exists_query, **db_kwargs)
     if result:
@@ -434,13 +439,20 @@ def find_airline_for_staff(db, username):
     """
     SELECT airline_name
     FROM airline_staff
-    WHERE username = {username}
+    WHERE {username}
     """
     find_airline_query = find_airline_query_template.format(
-        username=KV_ARG("username", "string", username)
+        username=KV_ARG("username", "string", username, mode="restricted")
     )
     airline_name = db.execute_query(find_airline_query)
-    return airline_name[0]["airline_name"]
+    if airline_name is None:
+        return jsonify({
+            "status": 'error',
+            "message": "Internal error"
+        }), 500
+    elif len(airline_name) == 0:
+        return []
+    return airline_name[0]
 
 # find the permission of a staff
 def find_permission(db, username):
