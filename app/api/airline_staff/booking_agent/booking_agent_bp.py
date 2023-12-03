@@ -8,6 +8,7 @@ booking_agent_bp = Blueprint('booking_agent', __name__, url_prefix='/booking-age
 
 @booking_agent_bp.route('/all', methods=["GET"])
 def all_handler():
+	# breakpoint()
 	# get username from session
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
@@ -35,6 +36,7 @@ def all_handler():
 	"""
 
 	limit = request.args.get("limit", None)
+	limit = int(limit) if limit is not None else 5
 
 	top_tickets_month_query = top_tickets_query_template.format(
 		airline_name=KV_ARG("airline_name", "string", airline_name),
@@ -83,11 +85,13 @@ def all_handler():
 
 	if top_commission_year_result is None:
 		return jsonify({"error": "Internal error."}), 500
-	return jsonify({
-		"Top 5 booking agent based on the number of tickets for last month": top_tickets_month_result,
-		"Top 5 booking agent based on the number of tickets for last year": top_tickets_year_result,
-		"Top 5 booking agent based on the commission received for last year": top_commission_year_result
-	}), 200
+	result = {
+		f"Top {limit} booking agent - number of tickets for last month": top_tickets_month_result,
+		f"Top {limit} booking agent - number of tickets for last year": top_tickets_year_result,
+		f"Top {limit} booking agent - commission received for last year": top_commission_year_result
+	}
+	print(result)
+	return jsonify(result), 200
 
 @booking_agent_bp.route('/add', methods=["POST"])
 def add_handler():
@@ -112,6 +116,23 @@ def add_handler():
 	airline_name = find_airline_for_staff(db, username)
 	booking_agent_email = data.get("booking_agent_email", None)
 	
+	# check whether the booking agent is registered
+	check_agent_query_template = \
+	"""
+	SELECT * FROM booking_agent
+	WHERE {booking_agent_email}
+	"""
+
+	check_agent_query = check_agent_query_template.format(
+		booking_agent_email=KV_ARG("email", "string", booking_agent_email)
+	)
+
+	check_agent_result = db.execute_query(check_agent_query)
+	if check_agent_result is None:
+		return jsonify({"error": "Internal error."}), 500
+	if len(check_agent_result) == 0:
+		return jsonify({"error": "The booking agent is not registered."}), 400
+
 	# check whether the booking agent works for the airline
 	check_query_template = \
 	"""
@@ -126,6 +147,7 @@ def add_handler():
 	)
 
 	check_result = db.execute_query(check_query)
+	# breakpoint()
 	if check_result is None:
 		return jsonify({"error": "Internal error."}), 500
 	if len(check_result) != 0:

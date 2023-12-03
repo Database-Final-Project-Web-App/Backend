@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime
 
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG, is_value_in_table
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG, is_value_in_table, FLIGHT_STATUS
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
@@ -41,7 +41,6 @@ def my_handler():
 	AND {arr_city}
 	AND {dept_city}
 	AND {ticket_id}
-	AND {purchase_date}
 	"""
 
 	# get parameters from json request
@@ -49,8 +48,10 @@ def my_handler():
 	customer_email = data.get("customer_email", None)
 	flight_num = data.get("flight_num", None)
 	airline_name = find_airline_for_staff(db, username)
-	departure_time = data.get("departure_time", None)
-	arrival_time = data.get("arrival_time", None)
+	# departure_time = data.get("departure_time", None)
+	# arrival_time = data.get("arrival_time", None)
+	departure_time_start = data.get("departure_time_start", None)
+	departure_time_end = data.get("departure_time_end", None)
 	price = data.get("price", None)
 	status = data.get("status", None)
 	airplane_id = data.get("airplane_id", None)
@@ -59,16 +60,16 @@ def my_handler():
 	arr_city = data.get("arr_city", None)
 	dept_city = data.get("dept_city", None)
 	ticket_id = data.get("ticket_id", None)
-	start_date = data.get("start_date", None)
-	end_date = data.get("end_date", None)
+	# start_date = data.get("start_date", None)
+	# end_date = data.get("end_date", None)
 
 	# build query
 	search_query = search_query_template.format(
 		customer_email=KV_ARG("customer_email", "string", customer_email),
 		flight_num=KV_ARG("flight_num", "number", flight_num),
 		airline_name=KV_ARG("airline_name", "string", airline_name),
-		arrival_time=KV_ARG("arrival_time", "datetime", arrival_time),
-		departure_time=KV_ARG("departure_time", "datetime", departure_time),
+		arrival_time=KV_ARG("arrival_time", "datetime", None),
+		departure_time=KV_ARG("departure_time", "datetime", (departure_time_start, departure_time_end)),
 		price=KV_ARG("price", "number", price),
 		status=KV_ARG("status", "string", status),
 		airplane_id=KV_ARG("airplane_id", "number", airplane_id),
@@ -77,8 +78,9 @@ def my_handler():
 		arr_city=KV_ARG("arr_city", "string", arr_city),
 		dept_city=KV_ARG("dept_city", "string", dept_city),
 		ticket_id=KV_ARG("ticket_id", "number", ticket_id),
-		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
+		# purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
+	print(search_query)
 
 
 	# execute query
@@ -105,7 +107,7 @@ def my_handler():
 			"ticket_id": row[11],
 			"customer_email": row[12],
 			"booking_agent_email": row[13],
-			"purchase_date": row[14],
+			# "purchase_date": row[14],
 		})
 	return jsonify({"flights": result}), 200
 
@@ -140,7 +142,7 @@ def create_handler():
 	if None in [airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name]:
 		return jsonify({"error": "Missing values"}), 400
 
-	if status not in ["Upcoming", "Inprogress", "Delayed"]:
+	if not FLIGHT_STATUS.is_valid(status):
 		return jsonify({"error": "status must be one of 'upcoming', 'inprogress', 'delayed'"}), 400
 	
 	# check if the flight already exists
@@ -267,7 +269,7 @@ def change_status_handler():
 		return jsonify({"error": "Flight does not exist"}), 400
 	
 	# check if the status is valid
-	if status not in ["Upcoming", "Inprogress", "Delayed"]:
+	if not FLIGHT_STATUS.is_valid(status):
 		return jsonify({"error": "status must be one of 'upcoming', 'inprogress', 'delayed'"}), 400
 
 	# build query
@@ -293,3 +295,75 @@ def change_status_handler():
 	# print(db.execute_query(check_flight_query))
 	return jsonify({"status": "success"}), 200
 
+
+@flight_bp.route('/customers-of-flight', methods=["GET"])
+def customer_of_flights_handler():
+	# breakpoint()
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
+	username = session['user']['username']
+	logintype = session['user']['logintype']
+	db = current_app.config["db"]
+	if logintype != LOGINTYPE.AIRLINE_STAFF:
+		return jsonify({"error": "You must login as airline staff."}), 400
+	
+	# all staffs can view this information
+	
+	# get parameters from json request
+	# data = request.get_json()
+	flight_num = request.args.get("flight_num", None)
+	airline_name = find_airline_for_staff(db, username)
+	# flight_num = data.get("flight_num", None)
+
+	if airline_name is None or flight_num is None:
+		return jsonify({"error": "Missing values"}), 400
+	flight_num = int(flight_num)	
+
+	# check if the flight exists
+	check_flight_query_template = \
+	"""
+	SELECT * FROM flight
+	WHERE {airline_name}
+	AND {flight_num}
+	"""
+
+	check_flight_query = check_flight_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		flight_num=KV_ARG("flight_num", "number", flight_num)
+	)
+
+	check_flight_result = db.execute_query(check_flight_query)
+	if check_flight_result is None:
+		return jsonify({"error": "Internal Error."}), 500
+	if len(check_flight_result) == 0:
+		return jsonify({"error": "Flight does not exist"}), 400
+
+	# build query
+	customer_of_flights_query_template = \
+	"""
+	SELECT customer_email, COUNT(*) AS num_of_tickets
+	FROM ticket
+	WHERE {airline_name}
+	AND {flight_num}
+	GROUP BY customer_email
+	"""
+
+	customer_of_flights_query = customer_of_flights_query_template.format(
+		airline_name=KV_ARG("airline_name", "string", airline_name),
+		flight_num=KV_ARG("flight_num", "number", flight_num)
+	)
+
+	# execute query
+	customer_of_flights_result = db.execute_query(customer_of_flights_query)
+	if customer_of_flights_result is None:
+		return jsonify({"error": "Query failed"}), 500
+
+	# return result
+	result = []
+	for row in customer_of_flights_result:
+		result.append({
+			"customer_email": row[0],
+			"num_of_tickets": row[1]
+		})
+	print(result)
+	return jsonify({"customers": result}), 200

@@ -55,7 +55,7 @@ def frequent_customer_handler():
 	# See the list of flights that the customer has taken in the past year
 	search_flights_query_template = \
 	"""
-	SELECT *
+	SELECT flight_num, airline_name, dept_airport_name, arr_airport_name, departure_time, arrival_time, price
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name)
 	WHERE {customer_email}
@@ -63,7 +63,7 @@ def frequent_customer_handler():
 	AND {purchase_date}
 	"""
 	
-	flights = []
+	flights = {}
 	for customer in top_tickets_year:
 		customer_email = customer[0]
 		search_flights_query = search_flights_query_template.format(
@@ -71,11 +71,10 @@ def frequent_customer_handler():
 			airline_name=KV_ARG("airline_name", "string", airline_name),
 			purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
 		)
-		flights_result = db.execute_query(search_flights_query)
+		flights_result = db.execute_query(search_flights_query, cursor_type="dict")
 		if flights_result is None:
 			return jsonify({"error": "Internal server error."}), 500
-		flights.append({customer_email: flights_result})
-		
+		flights[customer_email] = flights_result
 	return jsonify({"top_frequent_customers": top_tickets_year, "flights": flights}), 200
 
 
@@ -152,12 +151,14 @@ def report_handler():
 		m["{}-{:02}".format(row[1], row[2])] = {"number of tickets": float(row[0]), "Total amount":float(row[3])} if row[0] else (0.0, 0.0)
 	monthly_report_tickets = m
 	
-	return jsonify({
+	result = {
 		"start_date": start_date,
 		"end_date": end_date,
-		"Total amount of tickets": report,
-		"Monthly_report_tickets": monthly_report_tickets
-	}), 200
+		"total_report": report,
+		"monthly_report": monthly_report_tickets
+	}
+	print(result)
+	return jsonify(result), 200
 
 
 @misc_bp.route('/revenue-comparison', methods=["GET"])
@@ -254,13 +255,18 @@ def revenue_comparison_handler():
 		return jsonify({"error": "Internal server error."}), 500
 	
 	booking_year = float(booking_year[0][0]) if booking_year[0][0] else 0.0
-
-	return jsonify({
-		"direct_revenue_last_month": direct_month,
-		"booking_revenue_last_month": booking_month,
-		"direct_revenue_last_year": direct_year,
-		"booking_revenue_last_year": booking_year
-	}), 200
+	result = {
+		"last_month": {
+			"custoner": direct_month,
+			"booking_agent": booking_month
+		},
+		"last_year": {
+			"customer": direct_year,
+			"booking_agent": booking_year
+		},
+	}
+	print(result)
+	return jsonify(result), 200
 
 
 @misc_bp.route('/top-destination', methods=["GET"])
@@ -302,7 +308,7 @@ def top_destination_handler():
 		limit=limit
 	)
 
-	top_month_tickets = db.execute_query(top_month_tickets_query)
+	top_month_tickets = db.execute_query(top_month_tickets_query, cursor_type="dict")
 
 	if top_month_tickets is None:
 		return jsonify({"error": "Internal server error."}), 500
@@ -313,15 +319,18 @@ def top_destination_handler():
 		limit=limit
 	)
 
-	top_year_tickets = db.execute_query(top_year_tickets_query)
+	top_year_tickets = db.execute_query(top_year_tickets_query, cursor_type="dict")
 
 	if top_year_tickets is None:
 		return jsonify({"error": "Internal server error."}), 500
 	
-	return jsonify({
+	result = {
 		"top_month_destination": top_month_tickets,
 		"top_year_destination": top_year_tickets
-	}), 200
+	}
+	print(result)
+	
+	return jsonify(result), 200
 
 
 @misc_bp.route('/grant-permission', methods=["POST"])
@@ -344,7 +353,7 @@ def grant_permission_handler():
 	airline_name = find_airline_for_staff(db, username)
 	grant_username = data.get("airline_staff_username", None)
 	grant_permission = data.get("permission", None)
-	if grant_permission not in [PERMISSION.ADMIN, PERMISSION.OPERATOR, PERMISSION.NORMAL]:
+	if not PERMISSION.is_valid(grant_permission):
 		return jsonify({"error": "Invalid permission."}), 400
 	
 	# check if the user is working for the same airline

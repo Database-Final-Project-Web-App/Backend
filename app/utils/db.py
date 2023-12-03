@@ -370,13 +370,27 @@ def KV_ARG(arg_name: str, arg_type: str, arg_val, mode="general"):
         if len(arg_val) != 2:
             raise ValueError("For datetime value, arg_val should be a tuple of two values, but got {arg_val}".format(arg_val=arg_val))
 
-        if not (is_datetime(arg_val[0]) and is_datetime(arg_val[1])):
-            raise ValueError("For datetime value, arg_val should be a datetime string or a tuple of two datetime strings, but got {arg_val}".format(arg_val=arg_val))
-        return "{arg_name} BETWEEN \"{arg_val_min}\" AND \"{arg_val_max}\"".format(
-            arg_name=arg_name, 
-            arg_val_min=floor_datetime(arg_val[0]),
-            arg_val_max=ceil_datetime(arg_val[1])
-            )
+        # - (None, None)
+        if arg_val[0] is None and arg_val[1] is None:
+            return "TRUE"
+        elif arg_val[0] is None and is_datetime(arg_val[1]):
+            return "{arg_name} <= \"{arg_val_max}\"".format(
+                arg_name=arg_name, 
+                arg_val_max=ceil_datetime(arg_val[1])
+                )
+        elif arg_val[1] is None and is_datetime(arg_val[0]):
+            return "{arg_name} >= \"{arg_val_min}\"".format(
+                arg_name=arg_name, 
+                arg_val_min=floor_datetime(arg_val[0])
+                )
+        elif is_datetime(arg_val[0]) and is_datetime(arg_val[1]):
+            return "{arg_name} BETWEEN \"{arg_val_min}\" AND \"{arg_val_max}\"".format(
+                arg_name=arg_name, 
+                arg_val_min=floor_datetime(arg_val[0]),
+                arg_val_max=ceil_datetime(arg_val[1])
+                )
+        else:
+            raise ValueError("For datetime value, arg_val should be a datetime string or a tuple of two datetime strings, but got {arg_val}".format(arg_val=arg_val)) 
 
     return None
 
@@ -553,3 +567,14 @@ if __name__ == "__main__":
     #
     # db.disconnect()
 
+class FLIGHT_STATUS:
+    UPCOMING = "upcoming"
+    INPROGRESS = "inprogress"
+    DELAYED = "delayed"
+
+    @staticmethod
+    def is_valid(status: str):
+        if not isinstance(status, str):
+            return False
+        status = status.lower()
+        return status.lower() in [FLIGHT_STATUS.UPCOMING, FLIGHT_STATUS.INPROGRESS, FLIGHT_STATUS.DELAYED]

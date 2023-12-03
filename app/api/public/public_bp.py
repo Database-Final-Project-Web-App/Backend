@@ -61,8 +61,26 @@ def whoami_handler():
 			"message": 'User does not exist.'
 		}), 401
 	# breakpoint()	
-	return jsonify({
+	
+	# special data post-processing
+	# create a list of permission for airline staff from the query result
+	# breakpoint()
+
+	result = {
 		"status": 'success',
 		"message": 'User info retrieved successfully.',
-		"data": query_result[0]
-	}), 200
+		"data": None
+	}
+
+	if session['user']['logintype'] != LOGINTYPE.AIRLINE_STAFF:
+		result['data'] = query_result[0]
+		return jsonify(result), 200
+	
+	perms = []
+	for row in query_result:
+		perms.append(row['permission'])
+	result['data'] = query_result[0]
+	result['data']['permission'] = perms
+	
+	return jsonify(result), 200
+

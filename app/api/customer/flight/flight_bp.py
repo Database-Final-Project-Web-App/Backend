@@ -46,10 +46,10 @@ def my_handler():
 	data = request.get_json()
 	flight_num = data.get("flight_num", None)
 	airline_name = data.get("airline_name", None)
-	# arrival_time = data.get("arrival_time", None)
-	# departure_time = data.get("departure_time", None)
-	departure_date = data.get("departure_date", None)
-	arrival_date = data.get("arrival_date", None)
+	arrival_time = data.get("arrival_time", None)
+	departure_time = data.get("departure_time", None)
+	# departure_date = data.get("departure_date", None)
+	# arrival_date = data.get("arrival_date", None)
 	price = data.get("price", None)
 	status = data.get("status", None)
 	airplane_id= data.get("airplane_id", None)
@@ -60,9 +60,9 @@ def my_handler():
 	ticket_id = data.get("ticket_id", None)
 	purchase_date = data.get("purchase_date", None)
 
-	departure_time = date2datetime_range(departure_date)
-	arrival_time = date2datetime_range(arrival_date)
-
+	# departure_time = date2datetime_range(departure_date)
+	# arrival_time = date2datetime_range(arrival_date)
+	# breakpoint()
 	# build query
 	search_query = search_query_template.format(
 		username=KV_ARG("customer_email", "string", username),
@@ -80,6 +80,7 @@ def my_handler():
 		ticket_id=KV_ARG("ticket_id", "string", ticket_id),
 		purchase_date=KV_ARG("purchase_datetime", "datetime", purchase_date)
 	)
+	# breakpoint()
 
 	# execute query from app config
 	db = current_app.config["db"]
