@@ -74,21 +74,6 @@ def spending_handler():
 		m["{}-{:02}".format(row[1], row[2])] = float(row[0])
 	monthly_spending = m
 
-	# # Draw the bar chart for monthly spending, default to last 6 months
-	# # x-axis: month
-	# # y-axis: monthly spending
-	# x = monthly_spending["month"]
-	# y = monthly_spending["spending"]
-	# plt.bar(x,y,width=0.8, bottom=0, align='edge', color='blue', linewidth=2)
-	# for k, v in enumerate(y):
-	# 	plt.text(k+0.4, v, v, ha='center', va='bottom')
-	# plt.title("Monthly Spending from {} to {}".format(start_date, end_date))
-	# plt.xlabel("Month")
-	# plt.ylabel("Spending")
-	# plt.savefig("app/static/images/spending.png")
-
-	# breakpoint()
-
 	return jsonify({
 		"start_date": start_date,
 		"end_date": end_date,

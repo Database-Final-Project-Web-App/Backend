@@ -27,21 +27,23 @@ def whoami_handler():
 	FROM {tablename}
 	WHERE {username}
 	"""
+	
+	column_name = {
+		LOGINTYPE.CUSTOMER: ["email", "name", "building_number", "street", "city", "state", "phone_number", "passport_number", "passport_expiration", "passport_country", "date_of_birth"],
+		LOGINTYPE.BOOKING_AGENT: ["email", "booking_agent_id", "airline_name"],
+		LOGINTYPE.AIRLINE_STAFF: ["username", "first_name", "last_name", "date_of_birth", "airline_name", "permission"]
+	}[session['user']['logintype']]
+	table_name = {
+		LOGINTYPE.CUSTOMER: "customer",
+		LOGINTYPE.BOOKING_AGENT: "booking_agent NATURAL JOIN booking_agent_workfor",
+		LOGINTYPE.AIRLINE_STAFF: "airline_staff LEFT JOIN airline_staff_permission USING (username)"
+	}[session['user']['logintype']]
 	id_attr_name = {
 		LOGINTYPE.CUSTOMER: "email",
 		LOGINTYPE.BOOKING_AGENT: "email",
 		LOGINTYPE.AIRLINE_STAFF: "username"
 	}[session['user']['logintype']]
-	column_name = {
-		LOGINTYPE.CUSTOMER: ["email", "name", "building_number", "street", "city", "state", "phone_number", "passport_number", "passport_expiration", "passport_country", "date_of_birth"],
-		LOGINTYPE.BOOKING_AGENT: ["email", "booking_agent_id", "airline_name"],
-		LOGINTYPE.AIRLINE_STAFF: ["username", "first_name", "last_name", "date_of_birth", "airline_name"]
-	}[session['user']['logintype']]
-	table_name = {
-		LOGINTYPE.CUSTOMER: "customer",
-		LOGINTYPE.BOOKING_AGENT: "booking_agent NATURAL JOIN booking_agent_workfor",
-		LOGINTYPE.AIRLINE_STAFF: "airline_staff"
-	}[session['user']['logintype']]
+
 	query = query_template.format(
 		columnname=", ".join(column_name),
 		tablename=table_name,
@@ -58,7 +60,7 @@ def whoami_handler():
 			"status": 'error',
 			"message": 'User does not exist.'
 		}), 401
-	
+	# breakpoint()	
 	return jsonify({
 		"status": 'success',
 		"message": 'User info retrieved successfully.',
