@@ -470,7 +470,7 @@ def is_value_in_table(db, table, column, value, datatype):
         value=V_ARG(datatype, value)
     )
     result = db.execute_query(is_value_in_table_query)
-    breakpoint();
+    # breakpoint();
     if result is None:
         return jsonify({
             "status": 'error',

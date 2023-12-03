@@ -3,7 +3,7 @@ from flask import Blueprint, current_app, session, jsonify, request
 from .flight.flight_bp import flight_bp
 
 from app.utils.db import KV_ARG, V_ARG
-from app.utils.auth import LOGINTYPE
+from app.utils.auth import LOGINTYPE, is_logged_in
 
 public_bp = Blueprint('public', __name__, url_prefix='/public')
 
@@ -14,7 +14,7 @@ public_bp.register_blueprint(flight_bp, url_prefix=flight_bp.url_prefix)
 @public_bp.route('/whoami', methods=["GET"])
 def whoami_handler():
 	db = current_app.config["db"]
-	if 'user' not in session:
+	if not is_logged_in():
 		return jsonify({
 			"status": 'error',
 			"message": 'You must be logged in to access this information.'

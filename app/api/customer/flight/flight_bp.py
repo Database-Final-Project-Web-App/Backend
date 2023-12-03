@@ -1,12 +1,13 @@
 from flask import Blueprint, jsonify, request, current_app, session
 
-from app.utils.db import KV_ARG
+from app.utils.db import KV_ARG, date2datetime_range
 from app.utils.auth import is_logged_in, LOGINTYPE
 
 flight_bp = Blueprint('flight', __name__, url_prefix='/flight')
 
 @flight_bp.route('/my', methods=["POST"])
 def my_handler():
+	# breakpoint()
 	# get username from session
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
@@ -45,8 +46,10 @@ def my_handler():
 	data = request.get_json()
 	flight_num = data.get("flight_num", None)
 	airline_name = data.get("airline_name", None)
-	arrival_time = data.get("arrival_time", None)
-	departure_time = data.get("departure_time", None)
+	# arrival_time = data.get("arrival_time", None)
+	# departure_time = data.get("departure_time", None)
+	departure_date = data.get("departure_date", None)
+	arrival_date = data.get("arrival_date", None)
 	price = data.get("price", None)
 	status = data.get("status", None)
 	airplane_id= data.get("airplane_id", None)
@@ -56,6 +59,9 @@ def my_handler():
 	dept_city = data.get("dept_city", None)
 	ticket_id = data.get("ticket_id", None)
 	purchase_date = data.get("purchase_date", None)
+
+	departure_time = date2datetime_range(departure_date)
+	arrival_time = date2datetime_range(arrival_date)
 
 	# build query
 	search_query = search_query_template.format(
@@ -102,5 +108,4 @@ def my_handler():
 			"booking_agent_email": row[13],
 			"purchase_date": row[14],
 		})
-
 	return jsonify({"flights": result}), 200
