@@ -22,22 +22,31 @@ def purchase_handler():
 		return jsonify({"error": "You must login as customer."}), 400
 	
 	# get flight_num from url parameter
-	flight_num = request.args.get("flight_num", None)
+	data = request.get_json()
+	flight_num = data.get("flight_num", None)
+	airline_name = data.get("airline_name", None)
+	if flight_num is None or airline_name is None:
+		return jsonify({"error": "Flight number and airline name are required."}), 400
+	flight_num = int(flight_num)
 
-	# get flight info
+	# check whether flight exists
 	search_query_template = \
 	"""
-	SELECT airline_name
+	SELECT *
 	FROM flight
-	WHERE flight_num = {flight_num}
+	WHERE {flight_num}
+	AND {airline_name}
 	"""
 
 	search_query = search_query_template.format(
-		flight_num=KV_ARG("flight_num", "string", flight_num)
+		flight_num=KV_ARG("flight_num", "number", flight_num, mode="restricted"),
+		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted")
 	)
 
 	db = current_app.config["db"]
-	airline_name = db.execute_query(search_query)["airline_name"]
+	search_result=db.execute_query(search_query)
+	if not search_result:
+		return jsonify({"error": "Flight does not exist."}), 400
 
 	# check whether there is a ticket left
 	ticket_left_result = ticket_left(db, flight_num, airline_name)
@@ -61,7 +70,7 @@ def purchase_handler():
 	)
 	"""
 	insert_query = insert_query_template.format(
-		flight_num=V_ARG("string", flight_num),
+		flight_num=V_ARG("number", flight_num),
 		airline_name=V_ARG("string", airline_name),
 		customer_email=V_ARG("string", username),
 		booking_agent_id=V_ARG("string", None),
@@ -72,5 +81,7 @@ def purchase_handler():
 		db.execute_query(insert_query)
 	except Exception:
 		return jsonify({"error": "Already purchased the ticket."}), 400
+	db.commit()
+	breakpoint()
 
 	return jsonify({"status": "Successfully purchased the ticket."}), 200

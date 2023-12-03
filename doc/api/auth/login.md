@@ -34,7 +34,7 @@ Root Objects:
 Request
 
 ```bash
-curl -X POST localhost:5000/api/auth/login -b cookie.txt -c cookie.txt -d "username=customer1@example.com&password=password1&logintype=customer"
+curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d "{\"username\":\"customer1@example.com\", \"password\":\"password1\", \"logintype\":\"customer\"}" http://localhost:5000/api/auth/login
 ```
 
 Response
@@ -42,6 +42,7 @@ Response
 ```json
 {
   "message": "Successfully logged in",
-  "status": "success"
+  "status": "success",
+  "username_display": "Oliver One"
 }
 ```

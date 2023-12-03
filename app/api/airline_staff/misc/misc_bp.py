@@ -57,7 +57,6 @@ def report_handler():
 	Total amount of ticket sales for the past month, and last year, range of dates specified by the user
 	Monthly report of tickets
 	"""
-	#TODO:
 	# get username from session
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
