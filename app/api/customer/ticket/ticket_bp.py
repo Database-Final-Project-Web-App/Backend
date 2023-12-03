@@ -60,13 +60,13 @@ def purchase_handler():
 	# insert into ticket table
 	insert_query_template = \
 	"""
-	INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_id, purchase_date)
+	INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
 	VALUES (
 		{flight_num},
 		{airline_name},
 		{customer_email},
 		{booking_agent_id},
-		{purchase_date},
+		{purchase_date}
 	)
 	"""
 	insert_query = insert_query_template.format(
@@ -77,11 +77,9 @@ def purchase_handler():
 		purchase_date=V_ARG("datetime", purchase_datetime)
 	)
 
-	try:
-		db.execute_query(insert_query)
-	except Exception:
-		return jsonify({"error": "Already purchased the ticket."}), 400
+	result = db.execute_query(insert_query)
+	if result is None:
+		return jsonify({"error": "Internal error."}), 500
 	db.commit()
-	breakpoint()
 
 	return jsonify({"status": "Successfully purchased the ticket."}), 200

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app, session
-from datetime import datetime, date, timedelta
 
 from app.utils.db import KV_ARG
+from app.utils.auth import is_logged_in, LOGINTYPE
 
 from app.utils.misc import COMMISION_RATE
 
@@ -10,7 +10,12 @@ misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 @misc_bp.route('/commision', methods=['GET'])
 def commision_handler():
 	# get booking agent username from session
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
 	username = session['user']['username']
+	logintype = session['user']['logintype']
+	if logintype != LOGINTYPE.BOOKING_AGENT:
+		return jsonify({"error": "You must login as booking agent."}), 400
 	# current_date = date.today().strftime("%Y-%m-%d")
 	# default_date = (date.today() - timedelta(days=30)).strftime("%Y-%m-%d")
 
@@ -29,20 +34,23 @@ def commision_handler():
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT SUM(price * COMMISION_RATE) AS commision, COUNT(*) AS num_tickets, AVG(price * COMMISION_RATE) AS avg_commision
+	SELECT SUM(price * {COMMISION_RATE}) AS commision, COUNT(*) AS num_tickets, AVG(price * {COMMISION_RATE}) AS avg_commision
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
 	"""
 
 	commision_query = commision_query_template.format(
+		COMMISION_RATE=COMMISION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
-
+	# breakpoint()
 	db = current_app.config["db"]
-	commision = db.execute_query(commision_query)
-	commision = commision[0] if commision else (0.0, 0, 0.0)
+	commision_result = db.execute_query(commision_query)
+	if commision_result is None:
+		return jsonify({"error": "Internal error"}), 500
+	commision = commision_result[0]
 	return jsonify({
 		"commision": commision[0],
 		"num_tickets": commision[1],
@@ -107,7 +115,7 @@ def top_customers_handler():
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT customer_email, SUM(price * COMMISION_RATE) AS commision
+	SELECT customer_email, SUM(price * {COMMISION_RATE}) AS commision
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
@@ -117,12 +125,15 @@ def top_customers_handler():
 	"""
 
 	top_commision_customer_query = top_commision_customer_query_template.format(
+		COMMISION_RATE=COMMISION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
 		limit=limit
 	)
 
 	top_commision_customer = db.execute_query(top_commision_customer_query)
+	if top_commision_customer is None:
+		return jsonify({"error": "Internal error"}), 500
 	top_commision_result = []
 	for row in top_commision_customer:
 		top_commision_result.append({
