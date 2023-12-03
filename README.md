@@ -1,6 +1,6 @@
 # Database Final Prject
 
-* [Frontend] React framework for UI design
+<!-- * [Frontend] React framework for UI design
 
 * [Frontend] Single page application with client side routing
 
@@ -8,7 +8,7 @@
 
 * [Frontend] Served using express (listen to user request)
 
-* [Backend] Backend and database communication via pymysql
+* [Backend] Backend and database communication via pymysql -->
 
 ## Todo List
 

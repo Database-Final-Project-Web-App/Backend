@@ -38,4 +38,7 @@ Root Object:
 
 Request
 
-$ curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d "{}" http://localhost:5000/api/customer/flight/my
+```bash
+curl -X POST -H "Content-Type: application/json" -b cookie.txt -c cookie.txt -d "{}" http://localhost:5000/api/customer/flight/my
+```
+$

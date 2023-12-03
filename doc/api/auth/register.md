@@ -20,7 +20,7 @@ Root Object:
 | username | string | username | yes | |
 | password | string | password | yes | |
 
-**json responce**
+**json response**
 
 Root Objects:
 | Name | Type | Description | note |

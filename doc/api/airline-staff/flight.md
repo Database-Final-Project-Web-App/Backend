@@ -4,9 +4,13 @@
 
 >http://localhost:5000/api/airline-staff/flight/my
 
+**Request**: `POST`
+
 View all upcoming flight
 
-**Request**: `POST`
+**Request Parameters**
+
+**Input Type**: form
 
 Root Object:
 
@@ -160,7 +164,7 @@ Root Object:
 | flight_num | int | the flight number the staff wants to change | yes | |
 | status | string | status wants to change into | yes| can only be "Upcoming", "Inprogress", "Delayed" |
 
-**json responce**
+**json response**
 
 Root Objects:
 | Name | Type | Description | note |
