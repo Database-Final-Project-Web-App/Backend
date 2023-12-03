@@ -1,4 +1,33 @@
-## `/booking-agent/misc/commsion`
+# Booking agent misc functions
+
+## `/booking-agent/misc/commission`
+
+>http://localhost:5000/api/booking-agent/misc/commission
+
+**Request**: `GET`
+
+Find total commission, average commision and number of tickets during a specific time range.
+
+**Request Parameters** Query Parameters
+
+**Input Type**: Static Values
+
+Root Object:
+
+| Name | Type | Description | required? | note |
+| ---- | ---- | ----------- | --------- | ---- |
+| start_date | string | The beginning of the time range | No | format: `YYYY-MM-DD HH:MM` |
+| end_date | string | The end of the time range | No | format: `YYYY-MM-DD HH:MM`, defaulted current date |
+
+**Json Response**
+
+Root Object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| avg_commission | string | Total commission divided by the number of tickets | |
+| commission | string | Total commission | |
+| num_tickets | num | Number of tickets bought through the booking agent | |
 
 **Example**
 
@@ -19,6 +48,49 @@ response
 ```
 
 ## `/booking-agent/misc/top-customer`
+
+>http://localhost:5000/api/booking-agent/misc/top-customer
+
+**Request**: `GET`
+
+Find top customer based on commission and number of ticket he/she bought during a specific time range.
+
+**Request Parameters** Query Parameters
+
+**Input Type**: Static Values
+
+Root object
+
+Root Object:
+
+| Name | Type | Description | required? | note |
+| ---- | ---- | ----------- | --------- | ---- |
+| start_date | string | The beginning of the time range | No | format: `YYYY-MM-DD HH:MM` |
+| end_date | string | The end of the time range | No | format: `YYYY-MM-DD HH:MM`, defaulted current date |
+| limit | int | top number want to see | No | Default to 5 |
+
+**Json Response**
+
+Root Object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| top_commission_customer | array | Total commission recieved from the top customers | |
+| top_tickets_customer | array | Number of tickets bought by top customers | |
+
+`top_commission_customer[i]` object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| commission | string | total commission | |
+| customer_email | string | email of top customer | |
+
+`top_tickets_customer[i]` object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| num_tickets | int | Number of tickets the customer bought through the agent| |
+| customer_email | string | email of top customer | |
 
 **Example**
 

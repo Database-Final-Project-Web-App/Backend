@@ -408,11 +408,11 @@ def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
     
 
     if logintype == LOGINTYPE.CUSTOMER:
-        user_exists_query_template += " WHERE email = {username}"
+        user_exists_query_template += "WHERE email = {username}"
     elif logintype == LOGINTYPE.BOOKING_AGENT:
-        user_exists_query_template += " WHERE email = {username}"
+        user_exists_query_template += "WHERE email = {username}"
     elif logintype == LOGINTYPE.AIRLINE_STAFF:
-        user_exists_query_template += " WHERE username = {username}"
+        user_exists_query_template += "WHERE username = {username}"
 
     user_exists_query = user_exists_query_template.format(
         logintype=logintype,
@@ -420,8 +420,13 @@ def user_exists(db, username, logintype, db_kwargs={"cursor_type": "list"}):
     )
 
     result = db.execute_query(user_exists_query, **db_kwargs)
-    if result:
-        return True, result 
+    if result is None:
+        return jsonify({
+            "status": 'error',
+            "message": "Internal error"
+        }), 500
+    if len(result) > 0:
+        return True, result
     return False, None 
 
 # Check if there are tickets left for a flight

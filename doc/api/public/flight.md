@@ -16,7 +16,7 @@ Root Object:
 
 | Name | Type | Description | required? | note |
 | ---- | ---- | ----------- | --------- | ---- | 
-| flight_id | number | The flight number | no | |
+| flight_num | number | The flight number | no | |
 | airline_name | string | The airline name | no | |
 | departure_name | string | The departure airport name | no | |
 | arrival_time | string | The arrival time | no | |
@@ -24,8 +24,9 @@ Root Object:
 | status | string | The status of the flight | no | Default: Upcoming|
 | airplane_id | number | The airplane id | no | |
 | arr_airport_name | string | The arrival airport name | no | |
-| dep_airport_name | string | The departure airport name | no | |
-
+| dept_airport_name | string | The departure airport name | no | |
+| arr_city | string | The arrival city | no | |
+| dept_city | string | The departure city | no | |
 
 **Json Response**
 
@@ -39,7 +40,7 @@ Root Object:
 
 | Name | Type | Description | note |
 | ---- | ---- | ----------- | ---- |
-| flight_id | int | The flight number | |
+| flight_num | int | The flight number | |
 | airline_name | string | The airline name | |
 | departure_time | string | The departure time | format: `YYYY-MM-DD HH:MM` |
 | arrival_time | string | The arrival time | format: `YYYY-MM-DD HH:MM` |

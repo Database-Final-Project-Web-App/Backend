@@ -21,6 +21,9 @@ def add_handler():
 	data = request.get_json()
 	seat_num = data.get("seat_num", None)
 
+	if seat_num is None:
+		return jsonify({"error": "seat_num is required."}), 400
+
 	#add airplane
 	create_airplane_query_template = \
 	"""

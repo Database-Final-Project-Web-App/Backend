@@ -21,6 +21,9 @@ def add_handler():
 	airport_name = data.get("name", None)
 	city = data.get("city", None)
 
+	if airport_name is None or city is None:
+		return jsonify({"error": "name and city are required."}), 400
+
 	# check if the airport already exist
 	check_airport_query_template = \
 	"""

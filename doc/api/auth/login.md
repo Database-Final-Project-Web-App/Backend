@@ -43,6 +43,6 @@ Response
 {
   "message": "Successfully logged in",
   "status": "success",
-  "username_display": "Oliver One"
+
 }
 ```

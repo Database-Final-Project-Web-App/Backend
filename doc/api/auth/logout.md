@@ -19,7 +19,7 @@ Root Object:
 | ---- | ---- | ----------- | --------- | ---- | 
 | user | array | contains username and the type | yes | |
 
-**json responce**
+**json response**
 
 Root Objects:
 | Name | Type | Description | note |

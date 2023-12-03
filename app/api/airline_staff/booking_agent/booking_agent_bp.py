@@ -115,6 +115,9 @@ def add_handler():
 	data = request.get_json()
 	airline_name = find_airline_for_staff(db, username)
 	booking_agent_email = data.get("booking_agent_email", None)
+
+	if booking_agent_email is None:
+		return jsonify({"error": "booking_agent_email is required."}), 400
 	
 	# check whether the booking agent is registered
 	check_agent_query_template = \

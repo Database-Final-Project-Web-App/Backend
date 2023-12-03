@@ -112,15 +112,74 @@ After logging in successfully a user(customer) may do any of the following use c
 
 2. Purchase tickets: Customer chooses a flight and purchase ticket for this flight. You may find it easier to implement this along with a use case to search for flights.
 
+Insert the ticket we bought into the ticket table.
+
    > `POST /customer/ticket/purchase`
+
+   ```mysql-sql
+   INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
+	VALUES (
+		{flight_num},
+		{airline_name},
+		{customer_email},
+		{booking_agent_id},
+		{purchase_date}
+	)
+   ```
 
 3. Search for flights: Search for upcoming flights based on source city/airport name, destination city/airport name, date.
 
-   > `GET /public/flight/search`
+   > `POST /public/flight/search`
+
+   ```mysql-sql
+   WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT *
+	FROM flight_city
+	WHERE {flight_num}
+	AND {airline_name}
+	AND {arrival_time}
+	AND {departure_time}
+	AND {price}
+	AND {status}
+	AND {airplane_id}
+	AND {arr_airport_name}
+	AND {dept_airport_name}
+	AND {arr_city}
+	AND {dept_city}
+   ```
 
 4. Track My Spending: Default view will be total amount of money spent in the past year and a bar chart showing month wise money spent for last 6 months. He/she will also have option to specify a range of dates to view total amount of money spent within that range and a bar chart showing month wise money spent within that range. (Bar chart is optional, you can choose to represent the data anyway you like)
 
    > `GET /customer/misc/spending`
+
+   To get monthly spending:
+
+   ```mysql-sql
+   WITH my_ticket AS
+	(SELECT * 
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS spending, YEAR(purchase_date) AS year,MONTH(purchase_date) AS month
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+	GROUP BY year, month
+   ```
+   To get total spending:
+   ```mysql-sql
+   WITH my_ticket AS
+	(SELECT * 
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS spending
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+   ```
 
 5. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
 
@@ -132,11 +191,57 @@ After logging in successfully a booking agent may do any of the following use ca
 
 1. View My flights: Provide various ways for the booking agents to see flights information for which he/she purchased on behalf of customers. The default should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of dates, specify destination and/or source airport name and/or city name etc to show all the flights for which he/she purchased tickets.
 
-   > `GET /booking-agent/flight/my`
+   > `POST /booking-agent/flight/my`
+   ```mysql-sql
+   WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT * 
+	FROM flight_city NATURAL JOIN ticket
+	WHERE {customer_email}
+	AND {flight_num}
+	AND {airline_name}
+	AND {arrival_time}
+	AND {departure_time}
+	AND {price}
+	AND {status}
+	AND {airplane_id}
+	AND {arr_airport_name}
+	AND {dept_airport_name}
+	AND {arr_city}
+	AND {dept_city}
+	AND {booking_agent_email}
+	AND {ticket_id}
+	AND {purchase_date}   
+   ```
+
 
 2. Purchase tickets: Booking agent chooses a flight and purchases tickets for other customers giving customer information. You may find it easier to implement this along with a use case to search for flights. Notice that as described in the previous assignments, the booking agent may only purchase tickets from airlines they work for.
 
    > `POST /booking-agent/ticket/purchase`
+
+   check whether the booking agent work for the airline
+
+   ```mysql-sql
+   SELECT airline_name
+	FROM booking_agent_workfor
+	WHERE {username}
+   ```
+   buy ticket
+
+   ```mysql-sql
+	INSERT INTO ticket (flight_num, airline_name, customer_email, booking_agent_email, purchase_date)
+	VALUES (
+		{flight_num},
+		{airline_name},
+		{customer_email},
+		{booking_agent_id},
+		{purchase_date}
+	)   
+   ```
+
 
 3. Search for flights: Search for upcoming flights based on source city/airport name, destination city/airport name, date.
 
@@ -147,9 +252,54 @@ commission received and total numbers of tickets sold.
 
    > `GET /booking-agent/misc/commission`
 
+   Get average commission, total commission, number of tickets
+
+   ```mysql-sql
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price * {COMMISSION_RATE}) AS commission, COUNT(*) AS num_tickets, AVG(price * {COMMISSION_RATE}) AS avg_commission
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}   
+   ```
+
 5. View Top Customers: Top 5 customers based on number of tickets bought from the booking agent in the past 6 months and top 5 customers based on amount of commission received in the last year. Show a bar chart showing each of these 5 customers in x-axis and number of tickets bought in y-axis. Show another bar chart showing each of these 5 customers in x-axis and amount commission received in y- axis. (Again, UI/bar chart is optional, the important factor is that you are able to retrieve and display the data.)
 
    > `GET /booking-agent/misc/top-customer`
+
+   Top customer based on number of tickets bought
+
+   ```mysql-sql
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT customer_email, COUNT(*) AS num_tickets
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+	GROUP BY customer_email
+	ORDER BY num_tickets DESC
+	LIMIT {limit}   
+   ```
+
+   Top customer based on amount of commission
+
+   ```mysql-sql
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT customer_email, SUM(price * {COMMISSION_RATE}) AS commission
+	FROM my_ticket
+	WHERE {username}
+	AND {purchase_date}
+	GROUP BY customer_email
+	ORDER BY commission DESC
+	LIMIT {limit}   
+   ```
 
 6. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
 
@@ -161,50 +311,239 @@ After logging in successfully an airline staff may do any of the following use c
 
 1. View My flights: Defaults will be showing all the upcoming flights operated by the airline he/she works for the next 30 days. He/she will be able to see all the current/future/past flights operated by the airline he/she works for based range of dates, source/destination airports/city etc. He/she will be able to see all the customers of a particular flight.
 
-   > `GET /airline-staff/flight/my`
+   > `POST /airline-staff/flight/my`
+
+   ```mysql-sql
+    WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT customer_email, flight_num, airline_name
+	FROM flight_city NATURAL JOIN ticket
+	WHERE {customer_email}
+	AND {flight_num}
+	AND {airline_name}
+	AND {arrival_time}
+	AND {departure_time}
+	AND {price}
+	AND {status}
+	AND {airplane_id}
+	AND {arr_airport_name}
+	AND {dept_airport_name}
+	AND {arr_city}
+	AND {dept_city}
+	AND {ticket_id}
+   ```
 
 2. Create new flights: He or she creates a new flight, providing all the needed data, via forms. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. Defaults will be showing all the upcoming flights operated by the airline he/she works for the next 30 days.
 
    > `POST /airline-staff/flight/create`
 
+   check if the flight already exists
+
+   ```mysql-sql
+	SELECT * FROM flight
+	WHERE {airline_name}
+	AND {departure_time}
+	AND {arrival_time}
+	AND {airplane_id}
+   ```
+   
+   create new flight
+
+   ```mysql-sql
+	INSERT INTO flight (airline_name, departure_time, arrival_time, price, status, airplane_id, arr_airport_name, dept_airport_name)
+	VALUES ({airline_name},
+		{departure_time},
+		{arrival_time},
+		{price},
+		{status},
+		{airplane_id},
+		{arr_airport_name},
+		{dept_airport_name}
+	)   
+   ```
+
 3. Change Status of flights: He or she changes a flight status (from upcoming to in progress, in progress to delayed etc) via forms. The application should prevent unauthorized users or staffs without "Operator" permission from doing this action.
 
-   > `PUT /airline-staff/flight/:flight_id/status`
+   > `POST /airline-staff/flight/change-status`
+
+   ```mysql-sql
+   UPDATE flight
+	SET {status}
+	WHERE {flight_num}
+	AND {airline_name}
+   ```
 
 4. Add airplane in the system: He or she adds a new airplane, providing all the needed data, via forms. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. In the confirmation page, she/he will be able to see all the airplanes owned by the airline he/she works for.
 
    > `POST /airline-staff/airplane/add`
 
+   ```mysql-sql
+   INSERT INTO airplane(airline_name, seat_num)
+	VALUES ({airline_name}, {seat_num})
+   ```
+
 5. Add new airport in the system: He or she adds a new airport, providing all the needed data, via forms. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. (Additional requirement: Airline Staff with "Admin" permission will be able to add new airports into the system for the airline they work for.)
 
    > `POST /airline-staff/airport/add`
+
+   ```mysql-sql
+   INSERT INTO airport
+	VALUES ({airport_name}, {city})
+   ```
 
 6. View all the booking agents: Top 5 booking agents based on number of tickets sales for the past month and past year. Top 5 booking agents based on the amount of commission received for the last year.
 
    > `GET /airline-staff/booking-agent`
 
+   Get top5 booking agent works for the airline based on number of tickets, for our system, you can choose the number you want to see.
+
+   ```mysql-sql
+   SELECT booking_agent_email, COUNT(ticket_id) AS num_tickets
+	FROM ticket 
+	WHERE {airline_name}
+	AND {purchase_date}
+	AND booking_agent_email IS NOT NULL
+	GROUP BY booking_agent_email
+	ORDER BY num_tickets DESC
+	LIMIT {limit}
+   ```
+
+   Get top5 booking agent works for the airline based on commission, for our system, you can choose the number you want to see.
+
+   ```mysql-sql
+   WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT booking_agent_email, SUM(price * {COMMISSION_RATE}) AS commission
+	FROM my_ticket
+	WHERE {airline_name}
+	AND {purchase_date}
+	AND booking_agent_email IS NOT NULL
+	GROUP BY booking_agent_email
+	ORDER BY commission DESC
+	LIMIT {limit}
+   ```
+
 7. View frequent customers: Airline Staff will also be able to see the most frequent customer within the last year. In addition, Airline Staff will be able to see a list of all flights a particular Customer has taken only on that particular airline.
 
    > `GET /airline-staff/misc/frequent-customer`
+
+   Top frequent customer
+
+   ```mysql-sql
+   SELECT customer_email, COUNT(ticket_id) AS num_tickets
+	FROM ticket 
+	WHERE {airline_name}
+	AND {purchase_date}
+	GROUP BY customer_email
+	ORDER BY num_tickets DESC
+	LIMIT {limit}   
+   ```
 
 8. View reports: Total amounts of ticket sold based on range of dates/last year/last month etc. Month wise tickets sold in a bar chart.
 
    > `GET /airline-staff/misc/report`
 
+   Report the total amount and the number of tickets sold based on a range of time
+
+   ```mysql-sql
+   WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS total_amount, count(ticket_id) AS num_tickets
+	FROM my_ticket
+	WHERE {airline_name}
+	AND {purchase_date}
+   ```
+
+   Report the month wise amount and number of tickets sold in a range of time
+
+   ```mysql-sql
+   WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT COUNT(ticket_id) AS num_tickets, YEAR(purchase_date) AS year, MONTH(purchase_date) AS month, SUM(price) AS monthly_amount
+	FROM my_ticket
+	WHERE {airline_name}
+	AND {purchase_date}
+	GROUP BY year, month
+   ```
+
 9.  Comparison of Revenue earned: Draw a pie chart for showing total amount of revenue earned from direct sales (when customer bought tickets without using a booking agent) and total amount of revenue earned from indirect sales (when customer bought tickets using booking agents) in the last month and last year.
     > `GET /airline-staff/misc/revenue-comparison`
+
+    Direct purchase
+
+    ```mysql-sql
+    WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS total_amount
+	FROM my_ticket
+	WHERE {airline_name}
+	AND {purchase_date}
+	AND {booking_agent_email}
+    ```
+
+    Indirect purchase
+
+    ```mysql-sql
+    WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS total_amount
+	FROM my_ticket
+	WHERE {airline_name}
+	AND {purchase_date}
+	AND booking_agent_email IS NOT NULL
+    ```
 
 10. View Top destinations: Find the top 3 most popular destinations for last 3 months and last year.
 
     > `GET /airline-staff/misc/top-destination`
 
+    ```mysql-sql
+    WITH flight_city AS
+	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	FROM airport AS a1, airport AS a2, flight
+	WHERE a1.name = flight.dept_airport_name 
+	AND a2.name = flight.arr_airport_name)
+	SELECT arr_city, COUNT(ticket_id) AS num_tickets
+	FROM flight_city NATURAL JOIN ticket
+	WHERE {purchase_date}
+	AND {airline_name}
+	GROUP BY arr_city
+	ORDER BY num_tickets DESC
+	LIMIT {limit}
+    ```
+
 11. Grant new permissions: Grant new permissions to other staffs in the same airline. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. Initially there should be a staff with "Admin" permission in the database for each airline. Airline staffs registered through the application DO NOT have any permissions at beginning. (Additional requirement: Airline Staff with "Admin" permission will be able to grant new permissions to staffs in the same airline.)
 
     > `GET /airline-staff/misc/grant-permission`
 
+    ```mysql-sql
+    INSERT INTO airline_staff_permission
+	VALUES ({username}, {permission})
+    ```
+
 12. Add booking agents: Add booking agents that can work for this airline, providing their email address. The application should prevent unauthorized users or staffs without "Admin" permission from doing this action. A booking agent cannot work for any airline (thus cannot purchase tickets) until any staff add then through this action. (Additional requirement: Airline Staffs with "Admin" permission will be able to add booking agents that can work for their airline.)
 
     > `GET /airline-staff/booking-agent/add`
+
+    Add a new booking agent works for the airline
+
+    ```mysql-sql
+    INSERT INTO booking_agent_workfor
+	 VALUES ({booking_agent_email}, {airline_name})
+    ```
 
 13. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
 
