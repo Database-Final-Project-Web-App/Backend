@@ -2,14 +2,26 @@
 
 ## `/airline-staff/misc/frequent-customer`
 
-Method: `GET`
+> http://localhost:5000/api/airline-staff/misc/frequent-customer
+
+**Request**: `GET`
+
+Find top frequent customer in the airline which the staff works for. The frequency can be derived from the number of tickets the customer bought in the specific range of time.
+
+**Request Parameters** Query Parameters
+
+**Input Type**: Static Values
+
+| Name | Type | Description | required? | note |
+| ---- | ---- | ----------- | --------- | ---- |
+| limit | int | The number of top customer you want to see| No | Defaulted to list all
 
 **Example**
 
 Request
 
 ```bash
-curl -X GET -H "Content-Type: application/json" -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/frequent-customer?limit=5"
+curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/airline-staff/misc/frequent-customer?limit=5"
 ```
 
 Response
@@ -109,7 +121,7 @@ Response
 
 ## `/airline-staff/misc/grant-permission`
 
-Method: `POS`
+**Request**: `POST`
 
 **Example**
 

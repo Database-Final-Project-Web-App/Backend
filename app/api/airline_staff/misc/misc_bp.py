@@ -47,8 +47,36 @@ def frequent_customer_handler():
 	top_tickets_year = db.execute_query(top_tickets_year_query)
 
 	if top_tickets_year is None:
-		return jsonify({"error": "Query failed."}), 500
-	return jsonify({"top_frequent_customers": top_tickets_year}), 200
+		return jsonify({"error": "Internal server error."}), 500
+	
+	if len(top_tickets_year) == 0:
+		return jsonify({"error": "No customer found."}), 400
+	
+	# See the list of flights that the customer has taken in the past year
+	search_flights_query_template = \
+	"""
+	SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name)
+	WHERE {customer_email}
+	AND {airline_name}
+	AND {purchase_date}
+	"""
+	
+	flights = []
+	for customer in top_tickets_year:
+		customer_email = customer[0]
+		search_flights_query = search_flights_query_template.format(
+			customer_email=KV_ARG("customer_email", "string", customer_email),
+			airline_name=KV_ARG("airline_name", "string", airline_name),
+			purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
+		)
+		flights_result = db.execute_query(search_flights_query)
+		if flights_result is None:
+			return jsonify({"error": "Internal server error."}), 500
+		flights.append({customer_email: flights_result})
+		
+	return jsonify({"top_frequent_customers": top_tickets_year, "flights": flights}), 200
 
 
 @misc_bp.route('/report', methods=["GET"])
