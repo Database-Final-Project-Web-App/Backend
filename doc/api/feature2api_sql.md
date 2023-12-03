@@ -145,7 +145,7 @@ After logging in successfully a booking agent may do any of the following use ca
 4. View my commission: Default view will be total amount of commission received in the past 30 days and the average commission he/she received per ticket booked in the past 30 days and total number of tickets sold by him in the past 30 days. He/she will also have option to specify a range of dates to view total amount of
 commission received and total numbers of tickets sold.
 
-   > `GET /booking-agent/misc/commision`
+   > `GET /booking-agent/misc/commission`
 
 5. View Top Customers: Top 5 customers based on number of tickets bought from the booking agent in the past 6 months and top 5 customers based on amount of commission received in the last year. Show a bar chart showing each of these 5 customers in x-axis and number of tickets bought in y-axis. Show another bar chart showing each of these 5 customers in x-axis and amount commission received in y- axis. (Again, UI/bar chart is optional, the important factor is that you are able to retrieve and display the data.)
 

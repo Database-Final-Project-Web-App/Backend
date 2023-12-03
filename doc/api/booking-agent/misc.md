@@ -5,15 +5,15 @@
 Request
 
 ```bash
-curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/booking-agent/misc/commision?start_date=2023-01-01&end_date=2024-10-01"
+curl -X GET -b cookie.txt -c cookie.txt "http://localhost:5000/api/booking-agent/misc/commission?start_date=2023-01-01&end_date=2024-10-01"
 ```
 
 response
 
 ```json
 {
-  "avg_commision": "95.4000000",
-  "commision": "190.800",
+  "avg_commission": "95.4000000",
+  "commission": "190.800",
   "num_tickets": 2
 }
 ```
@@ -32,9 +32,9 @@ response
 
 ```json
 {
-  "top_commision_customer": [
+  "top_commission_customer": [
     {
-      "commision": "190.800",
+      "commission": "190.800",
       "customer_email": "customer3@example.com"
     }
   ],
