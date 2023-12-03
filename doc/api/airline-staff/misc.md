@@ -264,6 +264,7 @@ Root Object:
 | Name | Type | Description | note |
 | ---- | ---- | ----------- | ---- |
 | status | string | the permission granted successfully or not | |
+| message | string | the error message or successful message | |
 
 **Example**
 

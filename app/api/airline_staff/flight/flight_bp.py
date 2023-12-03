@@ -247,6 +247,10 @@ def change_status_handler():
 	flight_num = data.get("flight_num", None)
 	status = data.get("status", None)
 
+	# check if all values are provided
+	if None in [flight_num, status]:
+		return jsonify({"error": "Missing values"}), 400
+
 	# check if the flight exists
 	check_flight_query_template = \
 	"""

@@ -84,6 +84,7 @@ Root Object:
 | Name | Type | Description | note |
 | ---- | ---- | ----------- | ---- |
 | status | string | Whether the operation successful or not | |
+| message | string | the error message or successful message | |
 
 **Example**
 

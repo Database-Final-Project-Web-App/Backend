@@ -24,8 +24,9 @@ Root Object:
 | status | string | The status of the flight | no | Default: Upcoming|
 | airplane_id | number | The airplane id | no | |
 | arr_airport_name | string | The arrival airport name | no | |
-| dep_airport_name | string | The departure airport name | no | |
-
+| dept_airport_name | string | The departure airport name | no | |
+| arr_city | string | The arrival city | no | |
+| dept_city | string | The departure city | no | |
 
 **Json Response**
 
