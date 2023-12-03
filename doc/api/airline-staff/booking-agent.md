@@ -76,7 +76,14 @@ Root Object:
 | Name | Type | Description | required? | note |
 | ---- | ---- | ----------- | --------- | ---- | 
 | booking_agent_eamil | string | The booking agent the staff wants to add | yes | |
-| airline_name | string | The airline name | no | |
+
+**Json Response**
+
+Root Object:
+
+| Name | Type | Description | note |
+| ---- | ---- | ----------- | ---- |
+| status | string | Whether the operation successful or not | |
 
 **Example**
 

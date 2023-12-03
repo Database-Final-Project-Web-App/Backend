@@ -1,4 +1,6 @@
-##`/airline-staff/airplane/add`
+## `/airline-staff/airplane/add`
+
+>http://localhost:5000/api/airline-staff/airplane/add
 
 **Example**
 
