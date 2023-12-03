@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, timedelta
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
+from app.utils.misc import COMMISSION_RATE
 
 booking_agent_bp = Blueprint('booking_agent', __name__, url_prefix='/booking-agent')
 
@@ -15,6 +16,7 @@ def all_handler():
 	if logintype != LOGINTYPE.AIRLINE_STAFF:
 		return jsonify({"error": "You must login as airline staff."}), 400
 	db = current_app.config["db"]
+	airline_name=find_airline_for_staff(db, username)
 	current_date = datetime.now().strftime("%Y-%m-%d")
 	one_month_ago = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
 	one_year_ago = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
@@ -22,58 +24,65 @@ def all_handler():
 	# Top 5 booking agents works for the airline in terms of number of tickets sold for the past month, and last year
 	top_tickets_query_template = \
 	"""
-	SELECT booking_agent_id, COUNT(ticket_id) AS num_tickets
+	SELECT booking_agent_email, COUNT(ticket_id) AS num_tickets
 	FROM ticket 
 	WHERE {airline_name}
 	AND {purchase_date}
-	GROUP BY booking_agent_id
+	AND booking_agent_email IS NOT NULL
+	GROUP BY booking_agent_email
 	ORDER BY num_tickets DESC
 	LIMIT {limit}
 	"""
 
-	data = request.get_json()
-	limit = data.get("limit", None)
+	limit = request.args.get("limit", None)
 
 	top_tickets_month_query = top_tickets_query_template.format(
-		airline_name=find_airline_for_staff(db, username),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_month_ago, current_date)),
 		limit=limit
 	)
 
 	top_ticket_year_query = top_tickets_query_template.format(
-		airline_name=find_airline_for_staff(db, username),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
 		limit=limit
 	)
+	
 
 	top_tickets_month_result = db.execute_query(top_tickets_month_query)
 	top_tickets_year_result = db.execute_query(top_ticket_year_query)
 
 	if top_tickets_month_result is None or top_tickets_year_result is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal error."}), 500
 	
 	# Top 5 booking agents works for the airline in terms of commission received for last year
 	top_commission_query_template = \
 	"""
-	SELECT booking_agent_id, SUM(price * 0.1) AS commission
-	FROM ticket
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT booking_agent_email, SUM(price * {COMMISSION_RATE}) AS commission
+	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
-	GROUP BY booking_agent_id
+	AND booking_agent_email IS NOT NULL
+	GROUP BY booking_agent_email
 	ORDER BY commission DESC
 	LIMIT {limit}
 	"""
 
 	top_commission_year_query = top_commission_query_template.format(
-		airline_name=find_airline_for_staff(db, username),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
-		limit=limit
+		limit=limit,
+		COMMISSION_RATE=COMMISSION_RATE
 	)
 
 	top_commission_year_result = db.execute_query(top_commission_year_query)
 
 	if top_commission_year_result is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal error."}), 500
 	return jsonify({
 		"Top 5 booking agent based on the number of tickets for last month": top_tickets_month_result,
 		"Top 5 booking agent based on the number of tickets for last year": top_tickets_year_result,
@@ -107,7 +116,7 @@ def add_handler():
 	check_query_template = \
 	"""
 	SELECT booking_agent_email
-	FROM booking_agent_works_for
+	FROM booking_agent_workfor
 	WHERE {booking_agent_email}
 	AND {airline_name}
 	"""
@@ -115,24 +124,26 @@ def add_handler():
 		booking_agent_email=KV_ARG("booking_agent_email", "string", booking_agent_email),
 		airline_name=KV_ARG("airline_name", "string", airline_name)
 	)
+
 	check_result = db.execute_query(check_query)
 	if check_result is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal error."}), 500
 	if len(check_result) != 0:
 		return jsonify({"error": "The booking agent already works for the airline."}), 400
 	
 	# add booking agent
 	add_query_template = \
 	"""
-	INSERT INTO booking_agent_works_for
+	INSERT INTO booking_agent_workfor
 	VALUES ({booking_agent_email}, {airline_name})
 	"""
 	add_query = add_query_template.format(
-		booking_agent_email=KV_ARG("booking_agent_email", "string", booking_agent_email),
-		airline_name=KV_ARG("airline_name", "string", airline_name)
+		booking_agent_email=V_ARG("string", booking_agent_email),
+		airline_name=V_ARG("string", airline_name)
 	)
 	add_result = db.execute_query(add_query)
 	if add_result is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal error."}), 500
 	
+	db.commit()
 	return jsonify({"status": "success"}), 200

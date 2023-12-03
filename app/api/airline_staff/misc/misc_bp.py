@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, timedelta
-from app.utils.db import KV_ARG, find_airline_for_staff, find_permission
+from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
-from app.utils.misc import COMMISION_RATE
+from app.utils.misc import COMMISSION_RATE
 
 misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 
@@ -72,8 +72,12 @@ def report_handler():
 	# Total amount of ticket sales for the past month
 	report_query_template = \
 	"""
-	SELECT SUM(price) AS total_amount
-	FROM ticket
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT SUM(price) AS total_amount, count(ticket_id) AS num_tickets
+	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
 	"""
@@ -88,13 +92,17 @@ def report_handler():
 	if report is None:
 		return jsonify({"error": "Query failed."}), 500
 	
-	report = float(report[0][0]) if report[0][0] else 0.0
+	report = {"Total amount": float(report[0][0]), "Number of tickets sold": float(report[0][1])}if report[0][0] else (0.0, 0.0)
 	
 	# Monthly report of tickets
 	monthly_report_tickets_query_template = \
 	"""
-	SELECT COUNT(ticket_id) AS num_tickets, YEAR(purchase_date) AS year, MONTH(purchase_date) AS month
-	FROM ticket
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
+	SELECT COUNT(ticket_id) AS num_tickets, YEAR(purchase_date) AS year, MONTH(purchase_date) AS month, SUM(price) AS monthly_amount
+	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
 	GROUP BY year, month
@@ -108,19 +116,19 @@ def report_handler():
 	monthly_report_tickets = db.execute_query(monthly_report_tickets_query)
 
 	if monthly_report_tickets is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error":"Internal server error."}), 500
 	
 	m = {}
 	for row in monthly_report_tickets:
 		# format to YYYY-MM
-		m["{}-{:02}".format(row[1], row[2])] = float(row[0])
+		m["{}-{:02}".format(row[1], row[2])] = {"number of tickets": float(row[0]), "Total amount":float(row[3])} if row[0] else (0.0, 0.0)
 	monthly_report_tickets = m
 	
 	return jsonify({
-		start_date: start_date,
-		end_date: end_date,
-		"report": report,
-		"monthly_report_tickets": monthly_report_tickets
+		"start_date": start_date,
+		"end_date": end_date,
+		"Total amount of tickets": report,
+		"Monthly_report_tickets": monthly_report_tickets
 	}), 200
 
 
@@ -142,8 +150,12 @@ def revenue_comparison_handler():
 	# Total amount of ticket sales for the past month from direct sales
 	direct_query_template = \
 	"""
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
 	SELECT SUM(price) AS total_amount
-	FROM ticket
+	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
 	AND {booking_agent_email}
@@ -158,15 +170,19 @@ def revenue_comparison_handler():
 	direct_month = db.execute_query(direct_month_query)
 
 	if direct_month is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	direct_month = float(direct_month[0][0]) if direct_month[0][0] else 0.0
 
 	# Total amount of ticket sales for the past month from booking agent
 	booking_query_template = \
 	"""
+	WITH my_ticket AS
+	(SELECT *
+	FROM ticket JOIN flight
+	USING (flight_num, airline_name))
 	SELECT SUM(price) AS total_amount
-	FROM ticket
+	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
 	AND booking_agent_email IS NOT NULL
@@ -180,7 +196,7 @@ def revenue_comparison_handler():
 	booking_month = db.execute_query(booking_month_query)
 
 	if booking_month is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	booking_month = float(booking_month[0][0]) if booking_month[0][0] else 0.0
 
@@ -194,7 +210,7 @@ def revenue_comparison_handler():
 	direct_year = db.execute_query(direct_year_query)
 	
 	if direct_year is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	direct_year = float(direct_year[0][0]) if direct_year[0][0] else 0.0
 
@@ -207,7 +223,7 @@ def revenue_comparison_handler():
 	booking_year = db.execute_query(booking_year_query)
 
 	if booking_year is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	booking_year = float(booking_year[0][0]) if booking_year[0][0] else 0.0
 
@@ -232,6 +248,7 @@ def top_destination_handler():
 	current_date = datetime.now().strftime("%Y-%m-%d")
 	three_month_ago = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
 	one_year_ago = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
+	airline_name = find_airline_for_staff(db, username)
 	limit = request.args.get("limit", None)
 
 	# Top 3 destination in terms of number of tickets sold in the past 3 months
@@ -245,6 +262,7 @@ def top_destination_handler():
 	SELECT arr_city, COUNT(ticket_id) AS num_tickets
 	FROM flight_city NATURAL JOIN ticket
 	WHERE {purchase_date}
+	AND {airline_name}
 	GROUP BY arr_city
 	ORDER BY num_tickets DESC
 	LIMIT {limit}
@@ -252,23 +270,25 @@ def top_destination_handler():
 
 	top_month_tickets_query = top_tickets_query_template.format(
 		purchase_date=KV_ARG("purchase_date", "datetime", (three_month_ago, current_date)),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
 		limit=limit
 	)
 
 	top_month_tickets = db.execute_query(top_month_tickets_query)
 
 	if top_month_tickets is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	top_year_tickets_query = top_tickets_query_template.format(
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
+		airline_name=KV_ARG("airline_name", "string", airline_name),
 		limit=limit
 	)
 
 	top_year_tickets = db.execute_query(top_year_tickets_query)
 
 	if top_year_tickets is None:
-		return jsonify({"error": "Query failed."}), 500
+		return jsonify({"error": "Internal server error."}), 500
 	
 	return jsonify({
 		"top_month_destination": top_month_tickets,
@@ -296,7 +316,7 @@ def grant_permission_handler():
 	airline_name = find_airline_for_staff(db, username)
 	grant_username = data.get("airline_staff_username", None)
 	grant_permission = data.get("permission", None)
-	if grant_permission not in PERMISSION:
+	if grant_permission not in [PERMISSION.ADMIN, PERMISSION.OPERATOR, PERMISSION.NORMAL]:
 		return jsonify({"error": "Invalid permission."}), 400
 	
 	# check if the user is working for the same airline
@@ -318,13 +338,14 @@ def grant_permission_handler():
 	"""
 
 	grant_query = grant_query_template.format(
-		username=KV_ARG("username", "string", grant_username),
-		permission=KV_ARG("permission", "string", grant_permission)
+		username=V_ARG("string", grant_username),
+		permission=V_ARG("string", grant_permission)
 	)
 
 	grant_result = db.execute_query(grant_query)
 
 	if grant_result is None:
-		return jsonify({"error": "Query failed."}), 500
-
+		return jsonify({"error": "Internal server error."}), 500
+	
+	db.commit()
 	return jsonify({"status": "success"}), 200

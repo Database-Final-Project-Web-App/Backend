@@ -3,12 +3,12 @@ from flask import Blueprint, jsonify, request, current_app, session
 from app.utils.db import KV_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE
 
-from app.utils.misc import COMMISION_RATE
+from app.utils.misc import COMMISSION_RATE
 
 misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 
-@misc_bp.route('/commision', methods=['GET'])
-def commision_handler():
+@misc_bp.route('/commission', methods=['GET'])
+def commission_handler():
 	# get booking agent username from session
 	if not is_logged_in():
 		return jsonify({"error": "You must login first."}), 400
@@ -27,35 +27,35 @@ def commision_handler():
 	end_date = request.args.get("end_date", None)
 
 	# search for flight within a specific time period, default to 30 days
-	# get the total commision, number of tickets sold, and average commision per ticket
-	commision_query_template = \
+	# get the total commission, number of tickets sold, and average commission per ticket
+	commission_query_template = \
 	"""
 	WITH my_ticket AS
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT SUM(price * {COMMISION_RATE}) AS commision, COUNT(*) AS num_tickets, AVG(price * {COMMISION_RATE}) AS avg_commision
+	SELECT SUM(price * {COMMISSION_RATE}) AS commission, COUNT(*) AS num_tickets, AVG(price * {COMMISSION_RATE}) AS avg_commission
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
 	"""
 
-	commision_query = commision_query_template.format(
-		COMMISION_RATE=COMMISION_RATE,
+	commission_query = commission_query_template.format(
+		COMMISSION_RATE=COMMISSION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
 	# breakpoint()
 	db = current_app.config["db"]
-	commision_result = db.execute_query(commision_query, cursor_type="dict")
-	if commision_result is None:
+	commission_result = db.execute_query(commission_query, cursor_type="dict")
+	if commission_result is None:
 		return jsonify({"error": "Internal error"}), 500
-	commision = commision_result[0]
-	if (commision["num_tickets"] == 0):
-		commision["avg_commision"] = 0
-		commision["commision"] = 0
+	commission = commission_result[0]
+	if (commission["num_tickets"] == 0):
+		commission["avg_commission"] = 0
+		commission["commission"] = 0
 	
-	return jsonify(commision), 200
+	return jsonify(commission), 200
 
 @misc_bp.route('/top-customer', methods=['GET'])
 def top_customers_handler():
@@ -107,41 +107,41 @@ def top_customers_handler():
 		})
 
 	# search for flight within a specific time period, default to 1 year
-	# get the top customers in terms of total commision received
+	# get the top customers in terms of total commission received
 
-	top_commision_customer_query_template = \
+	top_commission_customer_query_template = \
 	"""
 	WITH my_ticket AS
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT customer_email, SUM(price * {COMMISION_RATE}) AS commision
+	SELECT customer_email, SUM(price * {COMMISSION_RATE}) AS commission
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
 	GROUP BY customer_email
-	ORDER BY commision DESC
+	ORDER BY commission DESC
 	LIMIT {limit}
 	"""
 
-	top_commision_customer_query = top_commision_customer_query_template.format(
-		COMMISION_RATE=COMMISION_RATE,
+	top_commission_customer_query = top_commission_customer_query_template.format(
+		COMMISSION_RATE=COMMISSION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
 		limit=limit
 	)
 
-	top_commision_customer = db.execute_query(top_commision_customer_query)
-	if top_commision_customer is None:
+	top_commission_customer = db.execute_query(top_commission_customer_query)
+	if top_commission_customer is None:
 		return jsonify({"error": "Internal error"}), 500
-	top_commision_result = []
-	for row in top_commision_customer:
-		top_commision_result.append({
+	top_commission_result = []
+	for row in top_commission_customer:
+		top_commission_result.append({
 			"customer_email": row[0],
-			"commision": row[1]
+			"commission": row[1]
 		})
 	
 	return jsonify({
 		"top_tickets_customer": top_tickets_result,
-		"top_commision_customer": top_commision_result
+		"top_commission_customer": top_commission_result
 	}), 200
