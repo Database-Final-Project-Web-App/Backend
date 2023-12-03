@@ -2,13 +2,19 @@ from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, date, timedelta
 
 from app.utils.db import KV_ARG
+from app.utils.auth import is_logged_in, LOGINTYPE
 
 misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 
 @misc_bp.route('/spending', methods=["GET"])
 def spending_handler():
 	# get parameters
-	username = session["user"]["username"]
+	if not is_logged_in():
+		return jsonify({"error": "You must login first."}), 400
+	username = session['user']['username']
+	logintype = session['user']['logintype']
+	if logintype != LOGINTYPE.CUSTOMER:
+		return jsonify({"error": "You must login as customer."}), 400
 	# current_date = date.today().strftime("%Y-%m-%d")
 	# default_date = (date.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 	# data = request.get_json()
