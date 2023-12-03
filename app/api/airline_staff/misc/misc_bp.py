@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, timedelta
 from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
-from app.utils.misc import COMMISION_RATE
+from app.utils.misc import COMMISSION_RATE
 
 misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 

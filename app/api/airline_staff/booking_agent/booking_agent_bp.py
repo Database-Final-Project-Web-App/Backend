@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app, session
 from datetime import datetime, timedelta
 from app.utils.db import KV_ARG, find_airline_for_staff, find_permission, V_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE, PERMISSION
-from app.utils.misc import COMMISION_RATE
+from app.utils.misc import COMMISSION_RATE
 
 booking_agent_bp = Blueprint('booking_agent', __name__, url_prefix='/booking-agent')
 
@@ -62,7 +62,7 @@ def all_handler():
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT booking_agent_email, SUM(price * {COMMISION_RATE}) AS commission
+	SELECT booking_agent_email, SUM(price * {COMMISSION_RATE}) AS commission
 	FROM my_ticket
 	WHERE {airline_name}
 	AND {purchase_date}
@@ -76,7 +76,7 @@ def all_handler():
 		airline_name=KV_ARG("airline_name", "string", airline_name),
 		purchase_date=KV_ARG("purchase_date", "datetime", (one_year_ago, current_date)),
 		limit=limit,
-		COMMISION_RATE=COMMISION_RATE
+		COMMISSION_RATE=COMMISSION_RATE
 	)
 
 	top_commission_year_result = db.execute_query(top_commission_year_query)

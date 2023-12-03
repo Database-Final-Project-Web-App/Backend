@@ -81,5 +81,7 @@ def purchase_handler():
 	if result is None:
 		return jsonify({"error": "Internal error."}), 500
 	db.commit()
-
-	return jsonify({"status": "Successfully purchased the ticket."}), 200
+	return jsonify({
+		"status": "success",
+		"message": "Ticket purchased."
+	}), 200

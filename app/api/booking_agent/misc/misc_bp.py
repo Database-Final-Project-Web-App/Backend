@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, current_app, session
 from app.utils.db import KV_ARG
 from app.utils.auth import is_logged_in, LOGINTYPE
 
-from app.utils.misc import COMMISION_RATE
+from app.utils.misc import COMMISSION_RATE
 
 misc_bp = Blueprint('misc', __name__, url_prefix='/misc')
 
@@ -34,28 +34,28 @@ def commission_handler():
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT SUM(price * {COMMISION_RATE}) AS commission, COUNT(*) AS num_tickets, AVG(price * {COMMISION_RATE}) AS avg_commission
+	SELECT SUM(price * {COMMISSION_RATE}) AS commission, COUNT(*) AS num_tickets, AVG(price * {COMMISSION_RATE}) AS avg_commission
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
 	"""
 
 	commission_query = commission_query_template.format(
-		COMMISION_RATE=COMMISION_RATE,
+		COMMISSION_RATE=COMMISSION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date))
 	)
 	# breakpoint()
 	db = current_app.config["db"]
-	commission_result = db.execute_query(commission_query)
+	commission_result = db.execute_query(commission_query, cursor_type="dict")
 	if commission_result is None:
 		return jsonify({"error": "Internal error"}), 500
 	commission = commission_result[0]
-	return jsonify({
-		"commission": commission[0],
-		"num_tickets": commission[1],
-		"avg_commission": commission[2]
-	}), 200
+	if (commission["num_tickets"] == 0):
+		commission["avg_commission"] = 0
+		commission["commission"] = 0
+	
+	return jsonify(commission), 200
 
 @misc_bp.route('/top-customer', methods=['GET'])
 def top_customers_handler():
@@ -115,7 +115,7 @@ def top_customers_handler():
 	(SELECT *
 	FROM ticket JOIN flight
 	USING (flight_num, airline_name))
-	SELECT customer_email, SUM(price * {COMMISION_RATE}) AS commission
+	SELECT customer_email, SUM(price * {COMMISSION_RATE}) AS commission
 	FROM my_ticket
 	WHERE {username}
 	AND {purchase_date}
@@ -125,7 +125,7 @@ def top_customers_handler():
 	"""
 
 	top_commission_customer_query = top_commission_customer_query_template.format(
-		COMMISION_RATE=COMMISION_RATE,
+		COMMISSION_RATE=COMMISSION_RATE,
 		username=KV_ARG("booking_agent_email", "string", username),
 		purchase_date=KV_ARG("purchase_date", "datetime", (start_date, end_date)),
 		limit=limit
