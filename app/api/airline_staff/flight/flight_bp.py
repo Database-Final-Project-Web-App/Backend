@@ -110,7 +110,7 @@ def create_handler():
 		return jsonify({"error": "you must login as airline staff"}), 400
 	else:
 		permission = find_permission(db, username)
-		if PERMISSION.ADMIN not in permission:
+		if not PERMISSION.is_in(PERMISSION.OPERATOR, permission):
 			return jsonify({"error": "you don't have the permission to create flight"}), 400
 	
 	# get parameters from json request
@@ -221,12 +221,11 @@ def change_status_handler():
 	username = session['user']['username']
 	logintype = session['user']['logintype']
 	db = current_app.config["db"]
-	if logintype != LOGINTYPE.AIRLINE_STAFF:
+	if not LOGINTYPE.is_equal(logintype, LOGINTYPE.AIRLINE_STAFF):
 		return jsonify({"error": "You must login as airline staff."}), 400
 	else:
-		# breakpoint()
 		permission = find_permission(db, username)
-		if PERMISSION.OPERATOR not in permission:
+		if not PERMISSION.is_in(PERMISSION.OPERATOR, permission):
 			return jsonify({"error": "you don't have the permission to change flight status"}), 400
 		
 	# get parameters from json request

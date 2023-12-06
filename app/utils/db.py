@@ -501,7 +501,7 @@ def find_permission(db, username):
         permission.append(PERMISSION.NORMAL)
     else:
         for i in permission_result:
-            permission.append(i[0])
+            permission.append(i[0].lower())
     return permission
 
 # is value in table

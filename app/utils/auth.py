@@ -16,6 +16,12 @@ class LOGINTYPE:
 			LOGINTYPE.BOOKING_AGENT.lower(), 
 			LOGINTYPE.AIRLINE_STAFF.lower()
 			]
+	
+	@staticmethod
+	def is_equal(logintype1, login_type2):
+		if not isinstance(logintype1, str) or not isinstance(login_type2, str):
+			return False
+		return logintype1.lower() == login_type2.lower()
 
 # define constant for staff permission
 class PERMISSION:
@@ -37,6 +43,25 @@ class PERMISSION:
 			None,
 			]
 	
+	@staticmethod
+	def is_equal(permission1, permission2):
+		if permission1 is None and permission2 is None:
+			return True
+		if not isinstance(permission1, str) or not isinstance(permission2, str):
+			return False
+		return permission1.lower() == permission2.lower()
+	
+	@staticmethod
+	def is_in(item, li):
+		if item is None:
+			return True
+		if not isinstance(item, str):
+			return False
+		for i in li:
+			if PERMISSION.is_equal(item, i):
+				return True
+		return False
+
 def is_logged_in():
 	if 'user' in session:
 		return True

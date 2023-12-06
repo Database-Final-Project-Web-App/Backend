@@ -347,13 +347,18 @@ def grant_permission_handler():
 		return jsonify({"error": "You must login as airline staff."}), 400
 	db = current_app.config["db"]
 	permission = find_permission(db, username)
-	if PERMISSION.ADMIN not in permission:
+	# if PERMISSION.ADMIN not in permission:
+	# if PERMISSION.ADMIN.lower() not in [p.lower() for p in permission]:
+	if not PERMISSION.is_in(PERMISSION.ADMIN, permission):
 		return jsonify({"error": "You must be admin to grant permission."}), 400
 	data = request.get_json()
 	airline_name = find_airline_for_staff(db, username)
 	grant_username = data.get("airline_staff_username", None)
 	grant_permission = data.get("permission", None)
-	if grant_permission not in [PERMISSION.ADMIN, PERMISSION.OPERATOR, PERMISSION.NORMAL]:
+	if grant_permission:
+		grant_permission = grant_permission.lower()
+	# if grant_permission not in [PERMISSION.ADMIN, PERMISSION.OPERATOR, PERMISSION.NORMAL]:
+	if not PERMISSION.is_valid(grant_permission):
 		return jsonify({"error": "Invalid permission."}), 400
 	
 	# check if the user is working for the same airline

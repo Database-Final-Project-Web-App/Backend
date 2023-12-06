@@ -110,7 +110,8 @@ def add_handler():
 		return jsonify({"error": "You must login as airline staff."}), 400
 	db = current_app.config["db"]
 	permission = find_permission(db, username)
-	if PERMISSION.ADMIN not in permission:
+	# if PERMISSION.ADMIN not in permission:
+	if not PERMISSION.is_in(PERMISSION.ADMIN, permission):
 		return jsonify({"error": "You don't have the permission to add booking agent."}), 400
 	data = request.get_json()
 	airline_name = find_airline_for_staff(db, username)

@@ -15,7 +15,8 @@ def add_handler():
 		return jsonify({"error": "You must login as airline staff."}), 400
 	db = current_app.config["db"]
 	permission = find_permission(db, username)
-	if PERMISSION.ADMIN not in permission:
+	# if PERMISSION.ADMIN not in permission:
+	if not PERMISSION.is_in(PERMISSION.ADMIN, permission):
 		return jsonify({"error": "You don't have the permission to add airport."}), 400
 	data = request.get_json()
 	airport_name = data.get("name", None)
