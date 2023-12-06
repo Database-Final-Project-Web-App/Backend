@@ -20,7 +20,7 @@ def my_handler():
 	search_query_template = \
 	"""
 	WITH flight_city AS
-	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	(SELECT flight.*, a1.city AS dept_city, a2.city AS arr_city
 	FROM airport AS a1, airport AS a2, flight
 	WHERE a1.name = flight.dept_airport_name 
 	AND a2.name = flight.arr_airport_name)
@@ -46,10 +46,10 @@ def my_handler():
 	data = request.get_json()
 	flight_num = data.get("flight_num", None)
 	airline_name = data.get("airline_name", None)
-	arrival_time = data.get("arrival_time", None)
-	departure_time = data.get("departure_time", None)
-	# departure_date = data.get("departure_date", None)
-	# arrival_date = data.get("arrival_date", None)
+	# arrival_time = data.get("arrival_time", None)
+	# departure_time = data.get("departure_time", None)
+	departure_date = data.get("departure_date", None)
+	arrival_date = data.get("arrival_date", None)
 	price = data.get("price", None)
 	status = data.get("status", None)
 	airplane_id= data.get("airplane_id", None)
@@ -60,8 +60,8 @@ def my_handler():
 	ticket_id = data.get("ticket_id", None)
 	purchase_date = data.get("purchase_date", None)
 
-	# departure_time = date2datetime_range(departure_date)
-	# arrival_time = date2datetime_range(arrival_date)
+	departure_time = date2datetime_range(departure_date)
+	arrival_time = date2datetime_range(arrival_date)
 	# breakpoint()
 	# build query
 	search_query = search_query_template.format(

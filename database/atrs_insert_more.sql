@@ -86,7 +86,7 @@ VALUES ("agentA@example.com", 'Delta Air Lines'),
 
 -- Adding airplanes to the system (each airline should have about 3~5 airplanes)
 INSERT INTO airplane (airline_name, seat_num) 
-VALUES ('China Eastern', 300),
+VALUES ('China Eastern', 3),
        ('China Eastern', 400),
        ('China Eastern', 500),
        ('American Airlines', 300),

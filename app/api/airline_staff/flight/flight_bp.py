@@ -22,7 +22,7 @@ def my_handler():
 	search_query_template = \
 	"""
 	WITH flight_city AS
-	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	(SELECT flight.*, a1.city AS dept_city, a2.city AS arr_city
 	FROM airport AS a1, airport AS a2, flight
 	WHERE a1.name = flight.dept_airport_name 
 	AND a2.name = flight.arr_airport_name)

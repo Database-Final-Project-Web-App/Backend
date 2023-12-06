@@ -448,8 +448,12 @@ def ticket_left(db, flight_num, airline_name):
         airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted"),
 	)
 
-    ticket_left = db.execute_query(ticket_left_query)
-    if ticket_left is None:
+    ticket_left = db.execute_query(ticket_left_query, cursor_type="dict")
+    breakpoint()
+    if ticket_left is None or len(ticket_left) == 0:
+        raise Exception("Internal error")
+    ticket_left = ticket_left[0]["ticket_left"]
+    if ticket_left <= 0:
         return False
     return True
 

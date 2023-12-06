@@ -11,7 +11,7 @@ def search_handler():
 	query_template = \
 	"""
 	WITH flight_city AS
-	(SELECT flight.*, a1.city AS dept_city, a2.name AS arr_city
+	(SELECT flight.*, a1.city AS dept_city, a2.city AS arr_city
 	FROM airport AS a1, airport AS a2, flight
 	WHERE a1.name = flight.dept_airport_name 
 	AND a2.name = flight.arr_airport_name)
@@ -64,8 +64,8 @@ def search_handler():
 
 	# execute query (get `db` from app config)
 	db = current_app.config['db']
-	query_result = db.execute_query(query)
-
+	query_result = db.execute_query(query, cursor_type="dict")
+	# breakpoint()
 	if query_result is None:
 		return jsonify({
 			"error": "Invalid query"
@@ -73,19 +73,23 @@ def search_handler():
 	# process query result
 	result = []
 	for row in query_result:
-		result.append({
-			"flight_num": row[0],
-			"airline_name": row[1],
-			"departure_time": row[2],
-			"arrival_time": row[3],
-			"price": row[4],
-			"status": row[5],
-			"airplane_id": row[6],
-			"arr_airport_name": row[7],
-			"dept_airport_name": row[8],
-			"dept_city": row[9],
-			"arr_city": row[10]
-		})	
+		result.append(
+			{key: value for key, value in row.items() if value is not None}
+		)
+		# result.append({
+		# 	"flight_num": row[0],
+		# 	"airline_name": row[1],
+		# 	"departure_time": row[2],
+		# 	"arrival_time": row[3],
+		# 	"price": row[4],
+		# 	"status": row[5],
+		# 	"airplane_id": row[6],
+		# 	"arr_airport_name": row[7],
+		# 	"dept_airport_name": row[8],
+		# 	"dept_city": row[9],
+		# 	"arr_city": row[10]
+		# })	
+
 	# breakpoint()
 	if result is None:
 		return jsonify({
