@@ -449,7 +449,7 @@ def ticket_left(db, flight_num, airline_name):
 	)
 
     ticket_left = db.execute_query(ticket_left_query, cursor_type="dict")
-    breakpoint()
+    # breakpoint()
     if ticket_left is None or len(ticket_left) == 0:
         raise Exception("Internal error")
     ticket_left = ticket_left[0]["ticket_left"]

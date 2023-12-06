@@ -27,7 +27,7 @@ def purchase_handler():
 	airline_name = data.get("airline_name", None)
 	customer_email = data.get("customer_email", None)
 	db = current_app.config["db"]
-
+	# breakpoint()
 	if customer_email is None:
 		return jsonify({"error": "You must have a customer."}), 400
 	
@@ -54,7 +54,7 @@ def purchase_handler():
 		flight_num=KV_ARG("flight_num", "number", flight_num, mode="restricted"),
 		airline_name=KV_ARG("airline_name", "string", airline_name, mode="restricted")
 	)
-
+	
 	search_result=db.execute_query(search_query)
 	if not search_result:
 		return jsonify({"error": "Flight does not exist."}), 400

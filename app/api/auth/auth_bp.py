@@ -167,13 +167,6 @@ def register_handler():
 		)
 
 	db = current_app.config["db"]
-	result = db.execute_query(insert_query)
-	if (result is None):
-		return jsonify({
-			"status": 'error',
-			"message": "Internal error"
-		}), 500
-
 
 	if logintype == LOGINTYPE.BOOKING_AGENT:
 		# get parameters from request
@@ -192,8 +185,17 @@ def register_handler():
 				"status": 'error',
 				"message": 'Airline name does not exist'
 			}), 400
+	
+	# insert user into database
+	result = db.execute_query(insert_query)
+	if (result is None):
+		return jsonify({
+			"status": 'error',
+			"message": "Internal error"
+		}), 500
 
-		# insert into booking_agent_workfor
+	if logintype == LOGINTYPE.BOOKING_AGENT:
+		# insert airline into booking_agent_workfor
 		insert_workfor_template = \
 		"""
 		INSERT INTO booking_agent_workfor (booking_agent_email, airline_name)

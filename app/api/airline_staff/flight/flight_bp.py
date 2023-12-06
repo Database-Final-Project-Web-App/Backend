@@ -26,7 +26,7 @@ def my_handler():
 	FROM airport AS a1, airport AS a2, flight
 	WHERE a1.name = flight.dept_airport_name 
 	AND a2.name = flight.arr_airport_name)
-	SELECT customer_email, flight_num, airline_name
+	SELECT *
 	FROM flight_city NATURAL JOIN ticket
 	WHERE {customer_email}
 	AND {flight_num}
@@ -84,7 +84,7 @@ def my_handler():
 
 
 	# execute query
-	search_result = db.execute_query(search_query)
+	search_result = db.execute_query(search_query, cursor_type="dict")
 
 	if search_result is None:
 		return jsonify({"error": "Internal error."}), 500
@@ -92,26 +92,9 @@ def my_handler():
 	# return result
 	result = []
 	for row in search_result:
-		result.append({
-			# "flight_num": row[0],
-			# "airline_name": row[1],
-			# "departure_time": row[2],
-			# "arrival_time": row[3],
-			# "price": row[4],
-			# "status": row[5],
-			# "airplane_id": row[6],
-			# "arr_airport_name": row[7],
-			# "dept_airport_name": row[8],
-			# "dept_city": row[9],
-			# "arr_city": row[10],
-			# "ticket_id": row[11],
-			# "customer_email": row[12],
-			# "booking_agent_email": row[13],
-			# "purchase_date": row[14],
-			"flight_num": row[1],
-			"airline_name": row[2],
-			"customer_email": row[0]
-		})
+		result.append(
+			{ key: value for (key, value) in row.items()}
+		)
 	return jsonify({"flights": result}), 200
 
 @flight_bp.route('/create', methods=["POST"])
